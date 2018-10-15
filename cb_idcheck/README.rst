@@ -14,3 +14,6 @@ To run the id check submission app::
 
    >>> idcheck.run()
 
+To run the whitelist database demo::
+
+   See demo/whitelistdb.sh

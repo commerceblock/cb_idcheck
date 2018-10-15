@@ -4,8 +4,7 @@ from tkinter import *
 import tkinter as tk
 import time
 import datetime
-import onfido
-from onfido.rest import ApiException
+import cb_onfido
 from pprint import pprint
 import csv
 import collections
@@ -17,16 +16,15 @@ class idcheck:
         self.title="CommerceBlock ID check"
         keys=[]
 
-        # Configure API key authorization: Token                                                                                                                                          
-        onfido.configuration.api_key['Authorization'] = 'token=' + 'YOUR_API_KEY'
-        onfido.configuration.api_key_prefix['Authorization'] = 'Token'
+        self.id_api=cb_onfido.cb_onfido()
+
         # create an instance of the API class                                                                                                                                                     
-        api_instance = onfido.DefaultApi()
-        applicant=onfido.Applicant()
-        address=onfido.Address()
-        check=onfido.CheckCreationRequest()
+        api_instance=self.id_api.api_instance
+        applicant=self.id_api.Applicant()
+        address=self.id_api.Address()
+        check=self.id_api.CheckCreationRequest()
         check.type='express'
-        report=onfido.Report()
+        report=self.id_api.Report()
         report.name='identity'
         check.reports=[report]
 

@@ -1,7 +1,6 @@
 #A customer record class for whitelisting.
 #The _id is a unique customer identifier.
 #Keys are the untweaked public keys and addresses are the contract tweaked addresses.
-
 import csv
 import collections
 from pprint import pprint
@@ -9,17 +8,18 @@ import datetime
 
 class record:
     def __init__(self, _id='',keys=[], addresses=[]):
-        self._id=_id
+        self._id=_id #applicant id
         self.addresses=addresses
         self.keys=keys
         self.setDate()
+        
 
     def get(self):
-        return { "_id" : self._id, 
-                 "addresses" : self.addresses,
-                 "keys" : self.keys,
-                 "date" : self.date } 
-
+        return { "_id" : self._id,
+                "addresses" : self.addresses,
+                "keys" : self.keys,
+                "date" : self.date } 
+    
     #Reads the keys from a key dump file.
     #Lines beginning '#' are comments. 
     #File format is: <address> <key>
@@ -36,6 +36,12 @@ class record:
     def setDate(self):
         self.date=datetime.datetime.utcnow()
 
+    #Import the ID and keys from a applicant_check = [applicant, check]
+    def import_from_applicant_check(self, applicant_check):
+        self._id=applicant_check[0]["id"]
+        self.addresses=applicant_check[1]["tags"][0]
+        self.keys=applicant_check[1]["tags"][1]
+
     def test(self, keyFile=None):
         self._id='a_user_supplied_unique_id'
         if(keyFile):
@@ -46,4 +52,5 @@ class record:
         pprint(self.get())
     
         
+
 
