@@ -1,6 +1,6 @@
 from tkinter import Frame, Label, SUNKEN, W, X
 
-class cbstatusbar(Frame):
+class statusbar(Frame):
 
     def __init__(self, master):
         Frame.__init__(self, master)

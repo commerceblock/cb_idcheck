@@ -51,6 +51,6 @@ class record:
             self.addresses=['add1', 'add2']
         pprint(self.get())
     
-        
+    
 
 

@@ -4,12 +4,12 @@ from tkinter import *
 import tkinter as tk
 import time
 import datetime
-import cb_onfido
+from cb_idcheck import cb_onfido
 from pprint import pprint
 import csv
 import collections
-from statusbar import *
-from cbmagic import *
+from cb_idcheck import statusbar
+from cb_idcheck import cbmagic
 
 class idcheck:
     def __init__(self, master):
@@ -19,18 +19,18 @@ class idcheck:
         self.id_api=cb_onfido.cb_onfido()
 
         # create an instance of the API class                                                                                                                                                     
-        api_instance=self.id_api.api_instance
-        applicant=self.id_api.Applicant()
-        address=self.id_api.Address()
-        check=self.id_api.CheckCreationRequest()
-        check.type='express'
-        report=self.id_api.Report()
-        report.name='identity'
-        check.reports=[report]
+        self.api_instance=self.id_api.api_instance
+        self.applicant=self.id_api.onfido.Applicant()
+        self.address=self.id_api.onfido.Address()
+        self.check=self.id_api.onfido.CheckCreationRequest()
+        self.check.type='express'
+        self.report=self.id_api.onfido.Report()
+        self.report.name='identity'
+        self.check.reports=[self.report]
 
         frameStatus = Frame(master)
         frameStatus.pack(side=BOTTOM, fill=X)
-        status=cbstatusbar(frameStatus)        
+        status=statusbar.statusbar(frameStatus)        
 
         frameTitle = Frame(master)
         frameTitle.pack()

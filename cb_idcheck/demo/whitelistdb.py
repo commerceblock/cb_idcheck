@@ -1,7 +1,7 @@
 #To be called from ../ocean-demo/whitelistdb.sh
 
-from cbid_database import cbid_database 
-from cbid_record import cbid_record
+from cb_idcheck import database 
+from cb_idcheck import record
 import random
 
 print("Generating random customer id and adding keys to record...")

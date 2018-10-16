@@ -3,14 +3,14 @@ import pprint
 import pymongo
 import urllib.parse
 import sys
-from record import record
+from cb_idcheck.record import record
 import os
 
 class database:
-    def __init__(self,username=os.environ['TESTNET_MONGODB_U'], password=os.environ['TESTNET_MONGODB_PW'], 
+    def __init__(self,username=None, password=None, 
                  port=27018, host='mongodbhost', authSource='testnet_iddb',authMechanism='SCRAM-SHA-256'):
-        self.username = urllib.parse.quote_plus(username)
-        self.password = urllib.parse.quote_plus(password)
+        self.username = urllib.parse.quote_plus(raw_input("MongoDB username: "))
+        self.password = urllib.parse.quote_plus(raw_input("password: "))
         self.port=port
         self.host=host
         self.authSource=authSource

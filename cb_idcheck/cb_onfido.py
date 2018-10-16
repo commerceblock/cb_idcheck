@@ -1,17 +1,17 @@
 #Class inhertied from onfido class for connection to onfido and id check submission/retrieval
 import onfido
 from onfido.rest import ApiException
-import record
+from cb_idcheck import record
 from pprint import pprint
 
 class cb_onfido:
       #Set the authentication foken for connection to onfido
       def set_token(self, token):
-            self.onfido.configuration.api_key['Authorization'] = 'token=' + token
+           self.onfido.configuration.api_key['Authorization'] = 'token=' + token
 
       def __init__(self, token):
             set_token(token)
-            __init__()
+            __init__(self)
 
       def __init__(self):
             self.record = record.record()
