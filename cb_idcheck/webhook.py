@@ -17,7 +17,7 @@ class webhook:
         self.db=database()
         self.route=route
         self.webhook_key='SJWiAQiLymii87USRuevfkUGuIAtnPCl'
-        logging.basicConfig(filename='example.log', level=logging.DEBUG)
+        logging.basicConfig(filename='/usr/local/var/log/cb_idcheck_auth.log', level=logging.WARNING)
 
     def authenticate(self, request):
         key = bytes(self.webhook_key, 'utf-8')
@@ -37,7 +37,7 @@ class webhook:
             #First: authenticate the message.
             if not self.authenticate(request):
 #                logging.warning(request.date + ' - WARNING: message to webhook failed authentication. Request data: ' + request.data)
-                logging.warning(str(datetime.now()) + ': Message to webhook failed authentication. Request data: ' + request.data.decode("utf-8"))
+                logging.warning('Python package cb_idcheck.webhook: ' + str(datetime.now()) + ': Message to webhook failed authentication. Request data: ' + request.data.decode("utf-8"))
                 abort(401) #TODO - find correct return code to use.
             self.request=request
             if request.method == 'POST':
@@ -55,9 +55,11 @@ class webhook:
                     if(applicant_check[1].result=="clear"):
                     #..read the data into a customer record...
                         self.cust_record.import_from_applicant_check(applicant_check)
-                        pprint(self.cust_record)
+                        #pprint(self.cust_record)
                     #...and add it to the whitelist database
+                        pprint('adding to whitelist...')
                         self.db.addToWhitelist(self.cust_record)
+                        pprint('...finished adding to whitelist.')
                 return '', 200
             else:
                 abort(400)

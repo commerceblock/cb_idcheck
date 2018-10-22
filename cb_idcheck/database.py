@@ -29,7 +29,10 @@ class database:
         self.whitelist=self.db.whitelist
 
     def addToWhitelist(self, customer_record : record):
-        return self.whitelist.insert_one(customer_record.get()).inserted_id
+        #Set the date of the record to the current time.
+        customer_record.setDate()
+        #Update the record using _id as filter. Add the keys and addresses to the arrays, if not already in the arrays. Change the updated date. Insert the record if no such record exists.
+        return self.whitelist.update_one({'_id': customer_record._id}, {'$addToSet': {'addresses' : customer_record.addresses, 'keys' : customer_record.keys}, '$set': {'updated_utc' : customer_record.updated_utc}, '$setOnInsert': {'created_utc': customer_record.created_utc}}, upsert=True).upserted_id
 
     def getFromID(self,_id):
         return self.whitelist.find_one({"_id" : _id})
@@ -94,3 +97,4 @@ class database:
         print("Fetch customer2")
         pprint.pprint(self.getFromID(customer2._id))
 
+        print("Finished test.")

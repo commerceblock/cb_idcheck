@@ -12,7 +12,7 @@ def send_message_to_webhook():
                               method='POST',
                               headers={'Content-Type': 'application/json',
 #                                       'X-Signature' : '84918579430de8e287a654a63c5104dfad9f1cb9'}) 
-                                       'X-Signature' : '84918579430de8e287a654a63c5104dfad9f1cb8'}) 
+                                       'X-Signature' : '84918579430de8e287a654a63c5104dfad9f1cb9'}) 
         resp = request.urlopen(req)
     except Exception as em:
         print("EXCEPTION: " + str(em))

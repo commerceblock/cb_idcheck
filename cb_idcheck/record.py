@@ -12,13 +12,14 @@ class record:
         self.addresses=addresses
         self.keys=keys
         self.setDate()
-        
 
     def get(self):
         return { "_id" : self._id,
                 "addresses" : self.addresses,
                 "keys" : self.keys,
-                "date" : self.date } 
+                "updated_utc" : self.updated_utc,
+                "created_utc" : self.created_utc
+                 } 
     
     #Reads the keys from a key dump file.
     #Lines beginning '#' are comments. 
@@ -34,7 +35,8 @@ class record:
                     self.keys = self.keys+[row['key']]
 
     def setDate(self):
-        self.date=datetime.datetime.utcnow()
+        self.created_utc=str(datetime.datetime.utcnow())
+        self.updated_utc=self.created_utc
 
     #Import the ID and keys from a applicant_check = [applicant, check]
     def import_from_applicant_check(self, applicant_check):

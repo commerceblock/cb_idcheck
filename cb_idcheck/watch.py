@@ -13,9 +13,10 @@ class watch:
         self.command="e1-cli readwhitelist "
 
     def watch(self):
+        print('watch started.')
         with self.db.whitelist.watch() as stream:
             for change in stream:
-
+                print('change detected.')
                 self.rec._id=change['_id']
                 self.rec.keys = change['keys']
                 self.rec.addresses=change['addresses']

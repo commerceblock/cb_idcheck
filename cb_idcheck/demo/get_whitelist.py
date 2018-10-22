@@ -4,7 +4,6 @@ from cb_idcheck import database
 db = database()
 db.connect()
 for document in db.whitelist.find():
-    document
     keys=document['keys']
     addresses=document['addresses']
     for key, address in zip(keys, addresses):
