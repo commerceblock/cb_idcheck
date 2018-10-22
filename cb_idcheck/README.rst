@@ -1,19 +1,48 @@
+##########
 cb_idcheck
-----------
+##########
 
-Modules: idcheck, database
+*********
+Overview
+*********
 
-To use any of the above modules, do::
+Tools for managing a whitelisting database for a Ocean (https://github.com/commerceblock/ocean) sidechain.
 
-   >>> import cb_idcheck
+The main classes of interest are:
+
+#. idcheck - a user details submission GUI for Onfido ID checks.
+#. database - for interacting with a mongodb whitelisting database.
+#. webhook - for monitoring a webhook for changes returned from Onfido following submission of an ID check.
+#. watch - for updating the local node whitelist in response to changes to a mongodb database.
+
+********
+Modules
+********
 
 idcheck
-------
+________
 
-To run the id check submission app::
+Run::
 
-   >>> idcheck.run()
+	>>> python idcheck.py
 
-To run the whitelist database demo::
 
-   See demo/whitelistdb.sh
+database
+________
+
+To run a test::
+
+	>>> python database.py
+
+webhook
+________
+
+Monitor the chosen webhook for updates from Onfido.
+
+To run the example::
+
+	>>> python webhook.py
+
+
+
+
