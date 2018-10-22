@@ -14,7 +14,7 @@ from cb_idcheck import cbmagic
 class idcheck:
     def __init__(self, master):
         self.title="CommerceBlock ID check"
-        keys=[]
+        self.keys=[]
 
         self.id_api=cb_onfido.cb_onfido()
 
@@ -25,232 +25,272 @@ class idcheck:
         self.check=self.id_api.onfido.CheckCreationRequest()
         self.check.type='express'
         self.report=self.id_api.onfido.Report()
-        self.report.name='identity'
+#        self.report.name='identity'
+        self.report.name='document'
         self.check.reports=[self.report]
 
         frameStatus = Frame(master)
         frameStatus.pack(side=BOTTOM, fill=X)
-        status=statusbar.statusbar(frameStatus)        
+        self.status=statusbar.statusbar(frameStatus)        
 
         frameTitle = Frame(master)
         frameTitle.pack()
-        listboxTitle =Listbox(frameTitle, selectmode=EXTENDED, exportselection=0, height=1)
-        listboxTitle.delete(0,END)
+        self.listboxTitle =Listbox(frameTitle, selectmode=EXTENDED, exportselection=0, height=1)
+        self.listboxTitle.delete(0,END)
         size=0
         for item in ["Miss", "Mr", "Mrs", "Ms"]:
-            listboxTitle.insert(END,item)
+            self.listboxTitle.insert(END,item)
             size=size+1
-        listboxTitle.selection_set(1)
-        listboxTitle.config(height=size)
-        listboxTitle.pack(side=LEFT)
+        self.listboxTitle.selection_set(1)
+        self.listboxTitle.config(height=size)
+        self.listboxTitle.pack(side=LEFT)
         labelTitle = Label(frameTitle, text='Title')
         labelTitle.pack(side=LEFT)
 
         frameFirstName = Frame(master)
         frameFirstName.pack()
-        entryFirstName = Entry(frameFirstName)
-        entryFirstName.pack(side=LEFT)
-        entryFirstName.insert(0,"John")
+        self.entryFirstName = Entry(frameFirstName)
+        self.entryFirstName.pack(side=LEFT)
+        self.entryFirstName.insert(0,"John")
         labelFirstName = Label(frameFirstName, text='First name')
         labelFirstName.pack(side=LEFT)
 
         frameMiddleName = Frame(master)
         frameMiddleName.pack()
-        entryMiddleName = Entry(frameMiddleName)
-        entryMiddleName.pack(side=LEFT)
-        entryMiddleName.insert(0,"Edward")
+        self.entryMiddleName = Entry(frameMiddleName)
+        self.entryMiddleName.pack(side=LEFT)
+        self.entryMiddleName.insert(0,"Edward")
         labelMiddleName = Label(frameMiddleName, text='Middle name')
         labelMiddleName.pack(side=LEFT)
 
         frameLastName = Frame(master)
         frameLastName.pack()
-        entryLastName = Entry(frameLastName)
-        entryLastName.pack(side=LEFT)
-        entryLastName.insert(0,"Smith")
+        self.entryLastName = Entry(frameLastName)
+        self.entryLastName.pack(side=LEFT)
+        self.entryLastName.insert(0,"Smith")
         labelLastName = Label(frameLastName, text='Last name')
         labelLastName.pack(side=LEFT)
         
         frameGender = Frame(master)
         frameGender.pack()
-        listboxGender = Listbox(frameGender, exportselection=0)
-        listboxGender.delete(0,END)
+        self.listboxGender = Listbox(frameGender, exportselection=0)
+        self.listboxGender.delete(0,END)
         size=0
         for item in ["male", "female"]:
-            listboxGender.insert(END,item)
+            self.listboxGender.insert(END,item)
             size=size+1
-        listboxGender.selection_set(0)
-        listboxGender.config(height=size)
-        listboxGender.pack(side=LEFT)
+        self.listboxGender.selection_set(0)
+        self.listboxGender.config(height=size)
+        self.listboxGender.pack(side=LEFT)
         labelGender = Label(frameGender, text='Gender')
         labelGender.pack(side=LEFT)
 
         frameDOB = Frame(master)
         frameDOB.pack()
-        entryDay = Entry(frameDOB, width=2)
-        entryDay.pack(side=LEFT)
-        entryDay.insert(0,24)
-        entryMonth = Entry(frameDOB, width=2)
-        entryMonth.pack(side=LEFT)
-        entryMonth.insert(0,12)
-        entryYear = Entry(frameDOB, width=4)
-        entryYear.pack(side=LEFT)
-        entryYear.insert(0,1975)
+        self.entryDay = Entry(frameDOB, width=2)
+        self.entryDay.pack(side=LEFT)
+        self.entryDay.insert(0,24)
+        self.entryMonth = Entry(frameDOB, width=2)
+        self.entryMonth.pack(side=LEFT)
+        self.entryMonth.insert(0,12)
+        self.entryYear = Entry(frameDOB, width=4)
+        self.entryYear.pack(side=LEFT)
+        self.entryYear.insert(0,1975)
         labelDOB = Label(frameDOB, text='Date of birth: DD MM YYYY')
         labelDOB.pack(side=LEFT)
 
-        def openIDDocFile():
-            openphoto(self, entryIDDoc) 
 
-        def openPhotoFile():
-            openphoto(self, entryPhoto) 
+        #A entry box for each side of the ID document
+        frameIDDoc1 = Frame(master)
+        frameIDDoc1.pack()
+        self.entryIDDoc1 = Entry(frameIDDoc1, width=25)
+        self.entryIDDoc1.pack(side=LEFT)
+        self.entryIDDoc1.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+        buttonIDDocFileOpen1 = Button(frameIDDoc1, text='ID document side 1', command=self.openIDDocFile)
+        buttonIDDocFileOpen1.pack(side=LEFT)
 
-        def openphoto(self, entry):
-            fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select file", filetypes = (("jpg files","*.jpg"),("png files","*.png"),("pdf files","*.pdf")))
-            entry.delete(0,END)
-            entry.insert(0,fileOpened)
+        frameIDDoc2 = Frame(master)
+        frameIDDoc2.pack()
+        self.entryIDDoc2 = Entry(frameIDDoc2, width=25)
+        self.entryIDDoc2.pack(side=LEFT)
+        self.entryIDDoc2.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+        buttonIDDocFileOpen1 = Button(frameIDDoc2, text='ID document side 2', command=self.openIDDocFile)
+        buttonIDDocFileOpen1.pack(side=LEFT)
 
-        def openKeyFile(self,entry, keys):
-            fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select key file", filetypes = (("all files","*.*")))
-            entry.delete(0,END)
-            entry.insert(0,fileOpened)
-
-        def openKeyFile():
-            openKeyFile(self, entryKey, keys)
-            
-        def loadKeys():
-            with open(entryKeyFile.get(),'rt') as csvfile:
-#                keyReader = csv.reader(csvfile, delimiter=' ')
-                myDialect = csv.excel
-                myDialect.delimiter=' '
-                dictReader = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['tweaked_address', 'untweaked_public_key'],dialect=myDialect)
-                for row in dictReader:
-                    self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
-                    
-            pprint('*** Keys loaded: ***')
-            pprint(self.keys)
-
-        frameIDDoc = Frame(master)
-        frameIDDoc.pack()
-        entryIDDoc = Entry(frameIDDoc, width=25)
-        entryIDDoc.pack(side=LEFT)
-        entryIDDoc.insert(0,"/Users/lawrence/Projects/ocean-idcheck/testPicture.png")
-        buttonIDDocFileOpen = Button(frameIDDoc, text='ID document', command=openIDDocFile)
-        buttonIDDocFileOpen.pack(side=LEFT)
-        
         frameIDDocType = Frame(master)
         frameIDDocType.pack()
-        listboxIDDocType = Listbox(frameIDDocType, exportselection=0)
-        listboxIDDocType.delete(0,END)
+        self.listboxIDDocType = Listbox(frameIDDocType, exportselection=0)
+        self.listboxIDDocType.delete(0,END)
         size=0
-        for item in ["passport", "national_identity_card", "driving_licence", "uk_biometric_residence_permit", "tax_id", "voter_id"]:
-            listboxIDDocType.insert(END,item)
+        #1 is both sides are required. 0 otherwise.
+        self.docTypeSides={"passport": 0, 
+                       "national_identity_card":1, 
+                       "driving_licence":1, 
+                       "uk_biometric_residence_permit":1, 
+                       "tax_id":0, 
+                       "voter_id":1
+                       }
+        self.docTypes=list(self.docTypeSides.keys())
+        
+        for item in self.docTypes:
+            self.listboxIDDocType.insert(END,item)
             size=size+1
-        listboxIDDocType.selection_set(0)
-        listboxIDDocType.config(height=size)
-        listboxIDDocType.pack(side=LEFT)
+        self.listboxIDDocType.selection_set(0)
+        self.listboxIDDocType.config(height=size)
+        self.listboxIDDocType.pack(side=LEFT)
         labelIDDocType = Label(frameIDDocType, text='ID document type')
         labelIDDocType.pack(side=LEFT)
 
         framePhoto = Frame(master)
         framePhoto.pack()
-        entryPhoto = Entry(framePhoto, width=25)
-        entryPhoto.pack(side=LEFT)
-        entryPhoto.insert(0,"/Users/lawrence/Projects/ocean-idcheck/testPicture.png")
-        buttonPhotoFileOpen = Button(framePhoto, text='Photo', command=openPhotoFile)
+        self.entryPhoto = Entry(framePhoto, width=25)
+        self.entryPhoto.pack(side=LEFT)
+        self.entryPhoto.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+        buttonPhotoFileOpen = Button(framePhoto, text='Photo', command=self.openPhotoFile)
         buttonPhotoFileOpen.pack(side=LEFT)
         
         labelAddress = Label(master, text='Address')
         labelAddress.pack()
         frameBuildingNo = Frame(master)
         frameBuildingNo.pack()
-        entryBuildingNo = Entry(frameBuildingNo)
-        entryBuildingNo.pack(side=LEFT)
-        entryBuildingNo.insert(0,"10")
+        self.entryBuildingNo = Entry(frameBuildingNo)
+        self.entryBuildingNo.pack(side=LEFT)
+        self.entryBuildingNo.insert(0,"10")
         labelBuildingNo = Label(frameBuildingNo, text='Building number')
         labelBuildingNo.pack(side=LEFT)
         frameStreet = Frame(master)
         frameStreet.pack()
-        entryStreet = Entry(frameStreet)
-        entryStreet.pack(side=LEFT)
-        entryStreet.insert(0,"Main Street")
+        self.entryStreet = Entry(frameStreet)
+        self.entryStreet.pack(side=LEFT)
+        self.entryStreet.insert(0,"Main Street")
         labelStreet = Label(frameStreet, text='Street')
         labelStreet.pack(side=LEFT)
         frameTown = Frame(master)
         frameTown.pack()
-        entryTown = Entry(frameTown)
-        entryTown.pack(side=LEFT)
-        entryTown.insert(0,"London")
+        self.entryTown = Entry(frameTown)
+        self.entryTown.pack(side=LEFT)
+        self.entryTown.insert(0,"London")
         labelTown = Label(frameTown, text='Town')
         labelTown.pack(side=LEFT)
         framePostcode = Frame(master)
         framePostcode.pack()
-        entryPostcode = Entry(framePostcode)
-        entryPostcode.pack(side=LEFT)
-        entryPostcode.delete(0,END)
-        entryPostcode.insert(0,"SW4 6EH")
+        self.entryPostcode = Entry(framePostcode)
+        self.entryPostcode.pack(side=LEFT)
+        self.entryPostcode.delete(0,END)
+        self.entryPostcode.insert(0,"SW4 6EH")
         labelPostcode = Label(framePostcode, text='Postcode')
         labelPostcode.pack(side=LEFT)
         frameCountry = Frame(master)
         frameCountry.pack()
-        entryCountry = Entry(frameCountry)
-        entryCountry.pack(side=LEFT)
-        entryCountry.delete(0,END)
-        entryCountry.insert(0,"GBR")
+        self.entryCountry = Entry(frameCountry)
+        self.entryCountry.pack(side=LEFT)
+        self.entryCountry.delete(0,END)
+        self.entryCountry.insert(0,"GBR")
         labelCountry = Label(frameCountry, text='Country')
         labelCountry.pack(side=LEFT)
 
         frameKeyFile = Frame(master)
         frameKeyFile.pack()
-        entryKeyFile = Entry(frameKeyFile, width=25)
-        entryKeyFile.pack(side=LEFT)
-        entryKeyFile.insert(0,"/Users/lawrence/Projects/ocean-demo/keys.client")
-        buttonKeyFileOpen = Button(frameKeyFile, text='Key file', command=openKeyFile)
+        self.entryKeyFile = Entry(frameKeyFile, width=25)
+        self.entryKeyFile.pack(side=LEFT)
+        self.entryKeyFile.insert(0,"/Users/lawrence/Projects/ocean-demo/keys.client")
+        buttonKeyFileOpen = Button(frameKeyFile, text='Key file', command=self.openKeyFile)
         buttonKeyFileOpen.pack(side=LEFT)
 
-        status.pack(side=BOTTOM, fill=X)
+        self.status.pack(side=BOTTOM, fill=X)
 
-        def fillApplicant():
-            applicant.first_name = entryFirstName.get()
-            applicant.last_name = entryLastName.get()
-            applicant.dob=datetime.date(int(entryYear.get()), int(entryMonth.get()), int(entryDay.get()))
-            applicant.country='GBR' #This is the jurisdiction where the ID check takes place, not the applicant's home country.
-            
-        def fillAddress():
-            address.building_number=entryBuildingNo.get()
-            address.street=entryStreet.get()
-            address.town=entryTown.get()
-            address.postcode=entryPostcode.get()
-            address.country=entryCountry.get()
-            applicant.addresses=[address]
-
-        def fillIDDocument():
-            pprint('hello')
-
-        def fillKeys():
-            check.tags=self.keys
-            pprint('*** keys loaded to check: ***')
-            pprint(check.tags)
-            
-        def submit():
-            status.set("Submitting...")
-            fillApplicant()
-            fillAddress()
-            loadKeys()
-            fillKeys()
-            try:
-                api_response = api_instance.create_applicant(data=applicant)
-                applicant_id=api_response.id
-                api_response=api_instance.create_check(applicant_id, data=check)
-                pprint(api_response)
-            except ApiException as e:
-                pprint(e.body)
-                status.set("Error.")
-        
         frameSubmit = Frame(master)
         frameSubmit.pack(side=BOTTOM, fill=X)
-        buttonSubmit = Button(frameSubmit, text='Submit', command=submit)
+        buttonSubmit = Button(frameSubmit, text='Submit', command=self.submit)
         buttonSubmit.pack(side=RIGHT)
-        
+
+
+    def fillApplicant(self):
+        self.applicant.first_name = self.entryFirstName.get()
+        self.applicant.last_name = self.entryLastName.get()
+        self.applicant.dob=datetime.date(int(self.entryYear.get()), int(self.entryMonth.get()), int(self.entryDay.get()))
+        self.applicant.country='GBR' #This is the jurisdiction where the ID check takes place, not the applicant's home country.
+            
+    def fillAddress(self):
+        self.address.building_number=self.entryBuildingNo.get()
+        self.address.street=self.entryStreet.get()
+        self.address.town=self.entryTown.get()
+        self.address.postcode=self.entryPostcode.get()
+        self.address.country=self.entryCountry.get()
+        self.applicant.addresses=[self.address]
+
+    def fillIDDocument(self):
+        print(self.listboxIDDocType.curselection()[0])
+        self.idDocType=self.docTypes[self.listboxIDDocType.curselection()[0]]
+        self.idDoc2Sided=(self.docTypeSides[self.idDocType] == 1)
+        self.idDocSide1File=self.entryIDDoc1.get()
+        self.idDocSide2File=self.entryIDDoc2.get()
+            
+    def uploadIDDocument(self):
+        self.status.set("Uploading id document...")
+        api_response = []
+        api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="front", file=self.idDocSide1File))
+        if (self.idDoc2Sided==True):
+            api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="back", file=self.idDocSide2File))
+        return api_response
+                
+    def fillKeys(self):
+        self.check.tags=self.keys
+        pprint('*** keys loaded to check: ***')
+        pprint(self.check.tags)
+            
+    def submit(self):
+        self.status.set("Submitting...")
+        self.fillApplicant()
+        self.fillAddress()
+        self.fillIDDocument()
+        self.loadKeys()
+        self.fillKeys()
+        try:
+            api_response = self.api_instance.create_applicant(data=self.applicant)
+            print(api_response)
+            self.applicant.id=api_response.id
+            api_response=self.uploadIDDocument()
+            print(api_response)
+            api_response=self.api_instance.create_check(self.applicant.id, data=self.check)
+            pprint(api_response)
+        except cb_onfido.ApiException as e:
+            pprint(e.body)
+            self.status.set("Error.")
+
+ 
+    def openIDDocFile(self):
+        openphoto(self, self.entryIDDoc) 
+
+    def openPhotoFile(self):
+        openphoto(self, self.entryPhoto) 
+
+    def openphoto(self, entry):
+        fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select file", filetypes = (("jpg files","*.jpg"),("png files","*.png"),("pdf files","*.pdf")))
+        entry.delete(0,END)
+        entry.insert(0,fileOpened)
+
+    def openKeyFile(self,entry):
+        fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select key file", filetypes = (("all files","*.*")))
+        entry.delete(0,END)
+        entry.insert(0,fileOpened)
+
+    def openKeyFile(self):
+        openKeyFile(self, self.entryKey)
+            
+    def loadKeys(self):
+        with open(self.entryKeyFile.get(),'rt') as csvfile:
+            #                keyReader = csv.reader(csvfile, delimiter=' ')
+            myDialect = csv.excel
+            myDialect.delimiter=' '
+            dictReader = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['tweaked_address', 'untweaked_public_key'],dialect=myDialect)
+            for row in dictReader:
+                self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
+                
+                pprint('*** Keys loaded: ***')
+                pprint(self.keys)
+
+       
     def run():
         root = tk.Tk()
         app = idcheck(root)

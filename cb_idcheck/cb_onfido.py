@@ -1,5 +1,6 @@
 #Class inhertied from onfido class for connection to onfido and id check submission/retrieval
 import onfido
+import os
 from onfido.rest import ApiException
 from cb_idcheck import record
 from pprint import pprint
@@ -16,7 +17,7 @@ class cb_onfido:
       def __init__(self):
             self.record = record.record()
             self.onfido = onfido
-            self.set_token('YOUR_API_KEY')
+            self.set_token(os.environ.get('ONF_TEST_TOK'))
             self.onfido.configuration.api_key_prefix['Authorization'] = 'Token'
             print(self.onfido.configuration.api_key)
             print(self.onfido.configuration.api_key_prefix)
@@ -100,4 +101,5 @@ class cb_onfido:
             return [api_response_check, api_response_report]
 
 
+            
 

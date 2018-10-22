@@ -38,9 +38,11 @@ class record:
 
     #Import the ID and keys from a applicant_check = [applicant, check]
     def import_from_applicant_check(self, applicant_check):
-        self._id=applicant_check[0]["id"]
-        self.addresses=applicant_check[1]["tags"][0]
-        self.keys=applicant_check[1]["tags"][1]
+        print(applicant_check[0])
+        print(applicant_check[1])
+        self._id=applicant_check[0].id
+        self.addresses=applicant_check[1].tags[::2]
+        self.keys=applicant_check[1].tags[1::2]
 
     def test(self, keyFile=None):
         self._id='a_user_supplied_unique_id'

@@ -9,8 +9,10 @@ import os
 class database:
     def __init__(self,username=None, password=None, 
                  port=27018, host='mongodbhost', authSource='testnet_iddb',authMechanism='SCRAM-SHA-256'):
-        self.username = urllib.parse.quote_plus(raw_input("MongoDB username: "))
-        self.password = urllib.parse.quote_plus(raw_input("password: "))
+#        self.username = urllib.parse.quote_plus(input("MongoDB username: "))
+#        self.password = urllib.parse.quote_plus(input("password: "))
+        self.username = urllib.parse.quote_plus(os.environ.get('TESTNET_MONGODB_U'))
+        self.password = urllib.parse.quote_plus(os.environ.get('TESTNET_MONGODB_PW'))
         self.port=port
         self.host=host
         self.authSource=authSource
@@ -31,6 +33,9 @@ class database:
 
     def getFromID(self,_id):
         return self.whitelist.find_one({"_id" : _id})
+
+    def removeFromID(self, _id):
+        self.whitelist.remove({"_id" : _id})
 
     def test(self, keyFile=None):
         self.connect()
