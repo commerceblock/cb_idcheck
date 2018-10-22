@@ -56,5 +56,7 @@ class record:
         pprint(self.get())
     
     
-
+if __name__ == "__main__":
+    from cb_idcheck import record
+    record().test()
 

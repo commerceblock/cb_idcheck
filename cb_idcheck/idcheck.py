@@ -106,7 +106,7 @@ class idcheck:
         self.entryIDDoc1 = Entry(frameIDDoc1, width=25)
         self.entryIDDoc1.pack(side=LEFT)
         self.entryIDDoc1.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
-        buttonIDDocFileOpen1 = Button(frameIDDoc1, text='ID document side 1', command=self.openIDDocFile)
+        buttonIDDocFileOpen1 = Button(frameIDDoc1, text='ID document front', command=self.openIDDocFile1)
         buttonIDDocFileOpen1.pack(side=LEFT)
 
         frameIDDoc2 = Frame(master)
@@ -114,8 +114,8 @@ class idcheck:
         self.entryIDDoc2 = Entry(frameIDDoc2, width=25)
         self.entryIDDoc2.pack(side=LEFT)
         self.entryIDDoc2.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
-        buttonIDDocFileOpen1 = Button(frameIDDoc2, text='ID document side 2', command=self.openIDDocFile)
-        buttonIDDocFileOpen1.pack(side=LEFT)
+        buttonIDDocFileOpen2 = Button(frameIDDoc2, text='ID document back', command=self.openIDDocFile2)
+        buttonIDDocFileOpen2.pack(side=LEFT)
 
         frameIDDocType = Frame(master)
         frameIDDocType.pack()
@@ -141,13 +141,13 @@ class idcheck:
         labelIDDocType = Label(frameIDDocType, text='ID document type')
         labelIDDocType.pack(side=LEFT)
 
-        framePhoto = Frame(master)
-        framePhoto.pack()
-        self.entryPhoto = Entry(framePhoto, width=25)
-        self.entryPhoto.pack(side=LEFT)
-        self.entryPhoto.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
-        buttonPhotoFileOpen = Button(framePhoto, text='Photo', command=self.openPhotoFile)
-        buttonPhotoFileOpen.pack(side=LEFT)
+#        framePhoto = Frame(master)
+#        framePhoto.pack()
+#        self.entryPhoto = Entry(framePhoto, width=25)
+#        self.entryPhoto.pack(side=LEFT)
+#        self.entryPhoto.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+#        buttonPhotoFileOpen = Button(framePhoto, text='Photo', command=self.openPhotoFile)
+#        buttonPhotoFileOpen.pack(side=LEFT)
         
         labelAddress = Label(master, text='Address')
         labelAddress.pack()
@@ -232,6 +232,7 @@ class idcheck:
         api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="front", file=self.idDocSide1File))
         if (self.idDoc2Sided==True):
             api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="back", file=self.idDocSide2File))
+        self.status.set("...upload complete.")
         return api_response
                 
     def fillKeys(self):
@@ -256,11 +257,14 @@ class idcheck:
             pprint(api_response)
         except cb_onfido.ApiException as e:
             pprint(e.body)
-            self.status.set("Error.")
+            self.status.set("Error: " + e.body)
 
  
-    def openIDDocFile(self):
-        openphoto(self, self.entryIDDoc) 
+    def openIDDocFile1(self):
+        openphoto(self, self.entryIDDoc1)
+  
+    def openIDDocFile2(self):
+        openphoto(self, self.entryIDDoc2) 
 
     def openPhotoFile(self):
         openphoto(self, self.entryPhoto) 
@@ -290,15 +294,15 @@ class idcheck:
                 pprint('*** Keys loaded: ***')
                 pprint(self.keys)
 
-       
-    def run():
-        root = tk.Tk()
-        app = idcheck(root)
-        root.title(app.title)
-        root.mainloop()
+
+if __name__ == "__main__":
+    from cb_idcheck import idcheck
+    root = tk.Tk()
+    root.title(idcheck(root).title)
+    root.mainloop()            
 
 
-
+    
 
 
 

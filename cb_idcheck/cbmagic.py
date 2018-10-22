@@ -1,5 +1,7 @@
 #A wrapper class for python-magic.
 import magic
+import collections
+from pprint import pprint
 
 class cbmagic(magic.Magic):
     def __init__(self):
@@ -13,8 +15,10 @@ class cbmagic(magic.Magic):
         #Return the file type: jpg, png or pdf                                                                                                                  
         return self.file_types[result.split(' ',1)[0]]
 
-def test_cbmagic():
-    myMagic = cbmagic()
-    pprint(myMagic.from_file('/Users/lawrence/Projects/ocean-idcheck/testPicture.png'))
-    pprint(myMagic.from_file('/Users/lawrence/Projects/ocean-idcheck/testPicture.jpg'))
-    pprint(myMagic.from_file('/Users/lawrence/Projects/ocean-idcheck/onfidoTerms.pdf'))
+if __name__ == "__main__":
+    from cb_idcheck import cbmagic
+    myMagic = cbmagic.cbmagic()
+    print("Deduces the file type from the file header and returns one of the following strings: 'jpg', 'png' or 'pdf'.")
+    filename = input("File name: ")
+    pprint(myMagic.from_file(filename))
+

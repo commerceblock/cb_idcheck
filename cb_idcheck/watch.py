@@ -28,3 +28,8 @@ class watch:
                 returnval=os.system(full_command)
                 #Need to confirm that the local whitelist node has been updated successfully...
                 print(returnval)
+
+if __name__ == "__main__":
+    from cb_idcheck import watch
+    watch().watch()
+

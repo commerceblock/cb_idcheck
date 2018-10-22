@@ -2,8 +2,9 @@
 import onfido
 import os
 from onfido.rest import ApiException
-from cb_idcheck import record
+from cb_idcheck import record, database
 from pprint import pprint
+
 
 class cb_onfido:
       #Set the authentication foken for connection to onfido
@@ -19,8 +20,6 @@ class cb_onfido:
             self.onfido = onfido
             self.set_token(os.environ.get('ONF_TEST_TOK'))
             self.onfido.configuration.api_key_prefix['Authorization'] = 'Token'
-            print(self.onfido.configuration.api_key)
-            print(self.onfido.configuration.api_key_prefix)
             self.api_instance = self.onfido.DefaultApi()
 
       #Retrieve report from href.
@@ -100,6 +99,29 @@ class cb_onfido:
 
             return [api_response_check, api_response_report]
 
+      def test(self):
+#Get the data from onfido - the hrefs will be given in the webhook
+            applicant_check=self.find_applicant_check('https://api.onfido.com/v2/applicants/2bc75038-4776-464c-807d-7d7ad21a08ce/checks/cd210ae4-f487-43da-9f7a-21de0ac43550')
+            db = database()
+            rec = record.record()
+#Fill a record object
+            rec.import_from_applicant_check(applicant_check)
+#Upload to MongoDB database
+            db.connect()
+            print("Whitelist before: ")
+            print(db.whitelist)
+            print("Adding customer record: ")
+            print(rec.get())
+            db.addToWhitelist(rec)
+            print("Read customer from database using id: "  + rec._id)
+            pprint(db.getFromID(rec._id))
+            print("Delete customer from database using id: "  + rec._id)
+            db.whitelist.remove({"_id" : rec._id})
+            print("Read customer from database using id: "  + rec._id)
+            pprint(db.getFromID(rec._id))
 
             
+if __name__ == "__main__":
+      from cb_idcheck import cb_onfido
+      cb_onfido.cb_onfido().test()
 

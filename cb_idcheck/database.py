@@ -98,3 +98,7 @@ class database:
         pprint.pprint(self.getFromID(customer2._id))
 
         print("Finished test.")
+
+if __name__ == "__main__":
+    from cb_idcheck import database
+    database().test()
