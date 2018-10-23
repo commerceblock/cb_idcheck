@@ -18,7 +18,7 @@ class cb_onfido:
       def __init__(self):
             self.record = record.record()
             self.onfido = onfido
-            self.set_token(os.environ.get('ONFIDO_API_KEY'))
+            self.set_token(os.environ.get('ONF_TEST_TOK'))
             self.onfido.configuration.api_key_prefix['Authorization'] = 'Token'
             self.api_instance = self.onfido.DefaultApi()
 
