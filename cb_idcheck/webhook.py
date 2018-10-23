@@ -19,7 +19,7 @@ class webhook:
         self.db=database()
         self.route=route
         self.webhook_key = urllib.parse.quote_plus(os.environ.get('ONFIDO_WEBHOOK_TOKEN'))
-        logging.basicConfig(filename='/usr/local/var/log/cb_idcheck_auth.log', level=logging.DEBUG)
+        logging.basicConfig(filename='/usr/local/var/log/cb_idcheck_auth.log', level=logging.WARNING)
 
     def authenticate(self, token, request):
         """
@@ -34,10 +34,10 @@ class webhook:
 
         """
         try:
-            signature = request.headers['X-Signature']
+            signature = request.META['HTTP_X_SIGNATURE']
             logging.debug("Onfido callback X-Signature: %s", signature)
-            logging.debug("Onfido callback request body: %s", request.data)
-            return self.hmac(token.encode(), request.data) == signature
+            logging.debug("Onfido callback request body: %s", request.body)
+            return _hmac(token, request.body) == signature
         except KeyError:
             logging.warning("Onfido callback missing X-Signature - this may be an unauthorised request.")
             return False
@@ -58,7 +58,7 @@ class webhook:
             self.request=request
             if request.method == 'POST':
             #Authenticate the message
-                myjson = json.loads(str(request.json))
+                myjson = json.loads(request.json)
                 #Check that this notification if of type "check.complete":
                 if(myjson["payload"]["action"]=="check.completed"):
                     #Retrieve the applicant and check from onfido using the href
@@ -78,21 +78,6 @@ class webhook:
         app = Flask(__name__)
         Debug(app)
         self.app.run(host='localhost', port='57398', debug=True)
-
-    def hmac(self,token, text):
-        """
-        Calculate SHA1 HMAC digest from request body and token.
-
-        Args:
-            token: bytes, the webhook token from Onfido API settings.
-            text: string, the text to hash.
-        
-        Return the SHA1 HMAC as a string.
-
-        """
-        auth_code = hmac.new(token, text, hashlib.sha1).hexdigest()
-        logging.debug("Onfido callback request HMAC: %s", auth_code)
-        return auth_code
         
 
 if __name__ == "__main__":
