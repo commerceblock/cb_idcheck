@@ -17,17 +17,14 @@ class webhook:
         self.id_api=cb_onfido.cb_onfido()
         self.db=database()
         self.route=route
-        self.webhook_key = urllib.parse.quote_plus(os.environ.get('ONFIDO_WEBHOOK_KEY', 'No key'))
+        self.webhook_key = urllib.parse.quote_plus(os.environ.get('ONFIDO_WEBHOOK_TOKEN', 'No key'))
         logging.basicConfig(filename='/usr/local/var/log/cb_idcheck_auth.log', level=logging.WARNING)
 
     def authenticate(self, request):
-        key = bytes(self.webhook_key, 'utf-8')
+        key = self.webhook_key.encode()
         message = request.data
-        digester = hmac.new(key=key, msg=message, digestmod=hashlib.sha1)
-        signature = digester.hexdigest()
-        print(signature)
-        print(request.headers["X-Signature"])
-        return(signature == request.headers["X-Signature"])
+        auth_code=hmac.new(key, message, hashlib.sha1).hexdigest()
+        return(auth_code == request.headers["X-Signature"])
 
     def start(self):
         #Connect to the whitelist database server
@@ -35,12 +32,10 @@ class webhook:
         #Route the webhook
         @self.app.route(self.route, methods=['POST'])
         def webhook():
-            print('Handling the message...')
             #First: authenticate the message.
             if not self.authenticate(request):
                 logging.warning('Python package cb_idcheck.webhook: ' + str(datetime.now()) + ': Message to webhook failed authentication. Request data: ' + request.data.decode("utf-8"))
                 abort(401) 
-
             myjson = request.json
             print(myjson)
             #Check that this notification if of type "check.complete":
