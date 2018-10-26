@@ -10,14 +10,23 @@ import csv
 import collections
 from cb_idcheck import statusbar
 from cb_idcheck import cbmagic
+import argparse
+import os
 
 class idcheck:
+    def parse_args(self, argv=None):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$CB_IDCHECK_API_TOKEN", default=os.environ.get('CB_IDCHECK_API_TOKEN', 'No key'))
+        args = parser.parse_args(argv)
+        self.token = args.token
+
     def __init__(self, master):
+        self.master=master
         self.title="CommerceBlock ID check"
         self.keys=[]
 
+    def run(self):
         self.id_api=cb_onfido.cb_onfido()
-
         # create an instance of the API class                                                                                                                                                     
         self.api_instance=self.id_api.api_instance
         self.applicant=self.id_api.onfido.Applicant()
@@ -29,11 +38,11 @@ class idcheck:
         self.report.name='document'
         self.check.reports=[self.report]
 
-        frameStatus = Frame(master)
+        frameStatus = Frame(self.master)
         frameStatus.pack(side=BOTTOM, fill=X)
         self.status=statusbar.statusbar(frameStatus)        
 
-        frameTitle = Frame(master)
+        frameTitle = Frame(self.master)
         frameTitle.pack()
         self.listboxTitle =Listbox(frameTitle, selectmode=EXTENDED, exportselection=0, height=1)
         self.listboxTitle.delete(0,END)
@@ -47,7 +56,7 @@ class idcheck:
         labelTitle = Label(frameTitle, text='Title')
         labelTitle.pack(side=LEFT)
 
-        frameFirstName = Frame(master)
+        frameFirstName = Frame(self.master)
         frameFirstName.pack()
         self.entryFirstName = Entry(frameFirstName)
         self.entryFirstName.pack(side=LEFT)
@@ -55,7 +64,7 @@ class idcheck:
         labelFirstName = Label(frameFirstName, text='First name')
         labelFirstName.pack(side=LEFT)
 
-        frameMiddleName = Frame(master)
+        frameMiddleName = Frame(self.master)
         frameMiddleName.pack()
         self.entryMiddleName = Entry(frameMiddleName)
         self.entryMiddleName.pack(side=LEFT)
@@ -63,7 +72,7 @@ class idcheck:
         labelMiddleName = Label(frameMiddleName, text='Middle name')
         labelMiddleName.pack(side=LEFT)
 
-        frameLastName = Frame(master)
+        frameLastName = Frame(self.master)
         frameLastName.pack()
         self.entryLastName = Entry(frameLastName)
         self.entryLastName.pack(side=LEFT)
@@ -71,7 +80,7 @@ class idcheck:
         labelLastName = Label(frameLastName, text='Last name')
         labelLastName.pack(side=LEFT)
         
-        frameGender = Frame(master)
+        frameGender = Frame(self.master)
         frameGender.pack()
         self.listboxGender = Listbox(frameGender, exportselection=0)
         self.listboxGender.delete(0,END)
@@ -85,7 +94,7 @@ class idcheck:
         labelGender = Label(frameGender, text='Gender')
         labelGender.pack(side=LEFT)
 
-        frameDOB = Frame(master)
+        frameDOB = Frame(self.master)
         frameDOB.pack()
         self.entryDay = Entry(frameDOB, width=2)
         self.entryDay.pack(side=LEFT)
@@ -101,7 +110,7 @@ class idcheck:
 
 
         #A entry box for each side of the ID document
-        frameIDDoc1 = Frame(master)
+        frameIDDoc1 = Frame(self.master)
         frameIDDoc1.pack()
         self.entryIDDoc1 = Entry(frameIDDoc1, width=25)
         self.entryIDDoc1.pack(side=LEFT)
@@ -109,7 +118,7 @@ class idcheck:
         buttonIDDocFileOpen1 = Button(frameIDDoc1, text='ID document front', command=self.openIDDocFile1)
         buttonIDDocFileOpen1.pack(side=LEFT)
 
-        frameIDDoc2 = Frame(master)
+        frameIDDoc2 = Frame(self.master)
         frameIDDoc2.pack()
         self.entryIDDoc2 = Entry(frameIDDoc2, width=25)
         self.entryIDDoc2.pack(side=LEFT)
@@ -117,7 +126,7 @@ class idcheck:
         buttonIDDocFileOpen2 = Button(frameIDDoc2, text='ID document back', command=self.openIDDocFile2)
         buttonIDDocFileOpen2.pack(side=LEFT)
 
-        frameIDDocType = Frame(master)
+        frameIDDocType = Frame(self.master)
         frameIDDocType.pack()
         self.listboxIDDocType = Listbox(frameIDDocType, exportselection=0)
         self.listboxIDDocType.delete(0,END)
@@ -141,7 +150,7 @@ class idcheck:
         labelIDDocType = Label(frameIDDocType, text='ID document type')
         labelIDDocType.pack(side=LEFT)
 
-#        framePhoto = Frame(master)
+#        framePhoto = Frame(self.master)
 #        framePhoto.pack()
 #        self.entryPhoto = Entry(framePhoto, width=25)
 #        self.entryPhoto.pack(side=LEFT)
@@ -149,30 +158,30 @@ class idcheck:
 #        buttonPhotoFileOpen = Button(framePhoto, text='Photo', command=self.openPhotoFile)
 #        buttonPhotoFileOpen.pack(side=LEFT)
         
-        labelAddress = Label(master, text='Address')
+        labelAddress = Label(self.master, text='Address')
         labelAddress.pack()
-        frameBuildingNo = Frame(master)
+        frameBuildingNo = Frame(self.master)
         frameBuildingNo.pack()
         self.entryBuildingNo = Entry(frameBuildingNo)
         self.entryBuildingNo.pack(side=LEFT)
         self.entryBuildingNo.insert(0,"10")
         labelBuildingNo = Label(frameBuildingNo, text='Building number')
         labelBuildingNo.pack(side=LEFT)
-        frameStreet = Frame(master)
+        frameStreet = Frame(self.master)
         frameStreet.pack()
         self.entryStreet = Entry(frameStreet)
         self.entryStreet.pack(side=LEFT)
         self.entryStreet.insert(0,"Main Street")
         labelStreet = Label(frameStreet, text='Street')
         labelStreet.pack(side=LEFT)
-        frameTown = Frame(master)
+        frameTown = Frame(self.master)
         frameTown.pack()
         self.entryTown = Entry(frameTown)
         self.entryTown.pack(side=LEFT)
         self.entryTown.insert(0,"London")
         labelTown = Label(frameTown, text='Town')
         labelTown.pack(side=LEFT)
-        framePostcode = Frame(master)
+        framePostcode = Frame(self.master)
         framePostcode.pack()
         self.entryPostcode = Entry(framePostcode)
         self.entryPostcode.pack(side=LEFT)
@@ -180,7 +189,7 @@ class idcheck:
         self.entryPostcode.insert(0,"SW4 6EH")
         labelPostcode = Label(framePostcode, text='Postcode')
         labelPostcode.pack(side=LEFT)
-        frameCountry = Frame(master)
+        frameCountry = Frame(self.master)
         frameCountry.pack()
         self.entryCountry = Entry(frameCountry)
         self.entryCountry.pack(side=LEFT)
@@ -189,7 +198,7 @@ class idcheck:
         labelCountry = Label(frameCountry, text='Country')
         labelCountry.pack(side=LEFT)
 
-        frameKeyFile = Frame(master)
+        frameKeyFile = Frame(self.master)
         frameKeyFile.pack()
         self.entryKeyFile = Entry(frameKeyFile, width=25)
         self.entryKeyFile.pack(side=LEFT)
@@ -199,7 +208,7 @@ class idcheck:
 
         self.status.pack(side=BOTTOM, fill=X)
 
-        frameSubmit = Frame(master)
+        frameSubmit = Frame(self.master)
         frameSubmit.pack(side=BOTTOM, fill=X)
         buttonSubmit = Button(frameSubmit, text='Submit', command=self.submit)
         buttonSubmit.pack(side=RIGHT)
@@ -298,8 +307,12 @@ class idcheck:
 if __name__ == "__main__":
     from cb_idcheck import idcheck
     root = tk.Tk()
-    root.title(idcheck(root).title)
+    idc=idcheck.idcheck(root)
+    idc.parse_args()
+    root.title(idc.title)
+    idc.run()
     root.mainloop()            
+
 
 
     
