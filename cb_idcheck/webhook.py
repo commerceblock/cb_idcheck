@@ -10,31 +10,43 @@ import logging
 from datetime import datetime
 import urllib, os
 import argparse
-import subprocess
-import time
+import subprocess, sys, time
+
+PYTHON=sys.executable
+SCRIPT=__file__
 
 class webhook:
-    def __init__(self, route='/', token=None, port=None, logfile=None):
+    def __init__(self, token=default=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
+                 url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
+                 port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
+                 log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
+                 ngrok=False, 
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
         self.app = Flask(__name__)
         self.cust_record=record.record()
-        self.id_api=cb_onfido.cb_onfido()
+        self.id_api=cb_onfido.cb_onfido(idcheck_token)
         self.db=database.database()
-        self.route=route
+        self.route='/'
+        self.url=url
         self.token=token
-        self.logfile=logfile
+        self.log=log
+        self.ngrok=ngrok
+        self.ngrok_process=None
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
-        parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$CB_IDCHECK_WEBHOOK_TOKEN", default=os.environ.get('CB_IDCHECK_WEBHOOK_TOKEN', None))
-        parser.add_argument('--port', required=False, type=str, help="Webhook token. Default=$CB_IDCHECK_WEBHOOK_PORT", default=os.environ.get('CB_IDCHECK_WEBHOOK_PORT', None))
-        parser.add_argument('--route', required=False, type=str, help="Webhook token. Default=$CB_IDCHECK_WEBHOOK_ROUTE", default=os.environ.get('CB_IDCHECK_WEBHOOK_ROUTE', '/'))
-        parser.add_argument('--logfile', required=False, type=str, help="Log file. Default=$CB_IDCHECK_LOG", default=os.environ.get('CB_IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'))
-        parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to internet using ngrok? (This is for testing purposes only).", default=False)
+        parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
+        parser.add_argument('--url', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_URL", default=self.url)
+        parser.add_argument('--port', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
+        parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG", self.log)
+        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
+        parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
         args = parser.parse_args(argv)
         self.token = args.token
+        self.url=args.url
         self.port=args.port
-        self.route=args.route
-        self.logfile=args.logfile
+        self.log=args.log
+        self.id_api.set_token(args.idcheck_token)
         self.ngrok=args.ngrok
 
     def authenticate(self, request):
@@ -45,21 +57,21 @@ class webhook:
 
     #Expose local web server to the internet (https only)
     def start_ngrok(self):
-#        subprocess.Popen(["nohup", "ngrok", "http", "--bind-tls=true", self.port], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        subprocess.Popen(["ngrok", "http", "--bind-tls=true", self.port], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.ngrok_process=subprocess.Popen(["ngrok", "http", "--bind-tls=true", self.port], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
     def get_ngrok_tunnel_info(self):
-        p = subprocess.Popen(["curl", "http://127.0.0.1:4040/api/tunnels", "--connect-timeout", "10"], stdout=subprocess.PIPE)        
-        self.tunnel_info=json.loads(p.communicate()[0].decode("UTF-8"))
+        time.sleep(5)
+        self.tunnel_info_process = subprocess.Popen(["curl", "http://127.0.0.1:4040/api/tunnels", "--connect-timeout", "10"], stdout=subprocess.PIPE)
+        self.tunnel_info=json.loads(self.tunnel_info_process.communicate()[0].decode("UTF-8"))
         print(self.tunnel_info)
         return self.tunnel_info
         
     def get_ngrok_ipaddress(self):
         self.get_ngrok_tunnel_info()
-        self.ngrok_public_url=self.tunnel_info['tunnels'][0]['public_url']
-        print("Webhook i.p. address: " + self.ngrok_public_url)
+        self.url=self.tunnel_info['tunnels'][0]['public_url']
+        print("Webhook i.p. address: " + self.url)
         print("route: " + self.route)
-        return self.ngrok_public_url
+        return self.url
 
     def route_webhook(self):
         @self.app.route(self.route, methods=['POST'])
@@ -83,11 +95,13 @@ class webhook:
         if(self.ngrok==True):
             self.start_ngrok()
             self.get_ngrok_ipaddress()
-            print("Register the above webhook I.P. address with the identity check provider and obtain the authentication token.")
-            self.token=input("Webhook authentication token: ")
+            webhook_api_response=self.id_api.create_webhook(url=self.url)
+            self.token=webhook_api_response.token
+            print('webhook token:' + self.token)
+
             
         #Configure logging
-        logging.basicConfig(filename=self.logfile, level=logging.WARNING)
+        logging.basicConfig(filename=self.log, level=logging.WARNING)
         #Connect to the whitelist database server
         self.db.connect()
 
@@ -95,6 +109,16 @@ class webhook:
 
         #Start the Flask app
         self.app.run(host='localhost', port=self.port, use_reloader=False)
+
+        self.cleanup()
+
+    def cleanup(self):
+        if(self.ngrok_process):
+            pprint("Cleaning up...")
+            self.ngrok_process.terminate()
+            self.tunnel_info_process.terminate()
+            self.ngrok_process.wait()
+            self.tunnel_info_process.wait()
 
 
 if __name__ == "__main__":

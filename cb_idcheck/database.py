@@ -5,22 +5,34 @@ import urllib.parse
 import sys
 from cb_idcheck.record import record
 import os
+import argparse
 
 class database:
-    def __init__(self,username=None, password=None, 
-                 port=27018, host='mongodbhost', authSource='testnet_iddb',authMechanism='SCRAM-SHA-256'):
-#        self.username = urllib.parse.quote_plus(input("MongoDB username: "))
-#        self.password = urllib.parse.quote_plus(input("password: "))
-        self.username = urllib.parse.quote_plus(os.environ.get('TESTNET_MONGODB_U'))
-        self.password = urllib.parse.quote_plus(os.environ.get('TESTNET_MONGODB_PW'))
+    def __init__(self,username=urllib.parse.quote_plus(os.environ.get('MONGODB_USER', None)), 
+                 password=urllib.parse.quote_plus(os.environ.get('MONGODB_PASS', None)), 
+                 port=os.environ['MONGODB_PORT'], host='mongodbhost', 
+                 authSource=urllib.parse.quote_plus(os.environ.get('MONGODB_USER', None)),
+                 authMechanism='SCRAM-SHA-256'):
+        self.username=username
+        self.password=password
         self.port=port
         self.host=host
         self.authSource=authSource
         self.authMechanism=authMechanism
 
+    def parse_args(self, argv=None):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--username', required=False, default=self.username,type=str, help="Username")
+        parser.add_argument('--password', required=False, default=self.password,type=str, help="Password")
+        parser.add_argument('--port', required=False, default=self.port,type=str, help="Port")
+        parser.add_argument('--host', required=False, default=self.host,type=str, help="Host")
+        parser.add_argument('--authsource', required=False, default=self.username,type=str, help="authSource")
+        parser.add_argument('--authmechanism', required=False, default=self.authMechanism,type=str, help="authMechanism")
+        args = parser.parse_args(argv)
+
     def connect(self):
         self.client = pymongo.MongoClient(self.host,
-                     port=self.port,
+                     port=int(self.port),
                       username=self.username,
                       password=self.password,
                       authSource=self.authSource,
@@ -101,4 +113,6 @@ class database:
 
 if __name__ == "__main__":
     from cb_idcheck import database
-    database().test()
+    db=database.database()
+    db.parse_args()
+    db.test()

@@ -2,23 +2,25 @@
 import onfido
 import os
 from onfido.rest import ApiException
-from cb_idcheck import record, database
+from .record import record 
+from .database import database
 from pprint import pprint
 
 
 class cb_onfido:
       #Set the authentication foken for connection to onfido
       def set_token(self, token):
-           self.onfido.configuration.api_key['Authorization'] = 'token=' + token
+            self.token=token
+            self.onfido.configuration.api_key['Authorization'] = 'token=' + self.token
 
       def __init__(self, token):
             __init__(self)
             set_token(token)
 
       def __init__(self):
-            self.record = record.record()
+            self.record = record()
             self.onfido = onfido
-            self.set_token(os.environ.get('CB_IDCHECK_API_TOKEN', None))
+            self.set_token(os.environ.get('IDCHECK_API_TOKEN', None))
             self.onfido.configuration.api_key_prefix['Authorization'] = 'Token'
             self.api_instance = self.onfido.DefaultApi()
 
@@ -119,6 +121,19 @@ class cb_onfido:
             db.whitelist.remove({"_id" : rec._id})
             print("Read customer from database using id: "  + rec._id)
             pprint(db.getFromID(rec._id))
+
+      def create_webhook(self, url=None):
+            data=onfido.Webhook()
+            data.url=url
+            self.webhook=None
+            try:
+                  # Create a webhook
+                  self.webhook = self.api_instance.create_webhook(data=data)
+                  pprint(self.webhook)
+            except ApiException as e:
+                  pprint(e.body)
+            return self.webhook
+
 
             
 if __name__ == "__main__":

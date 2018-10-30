@@ -8,8 +8,7 @@ from cb_idcheck import cb_onfido
 from pprint import pprint
 import csv
 import collections
-from cb_idcheck import statusbar
-from cb_idcheck import cbmagic
+from cb_idcheck.statusbar import statusbar
 import argparse
 import os
 
@@ -40,7 +39,7 @@ class idcheck:
 
         frameStatus = Frame(self.master)
         frameStatus.pack(side=BOTTOM, fill=X)
-        self.status=statusbar.statusbar(frameStatus)        
+        self.status=statusbar(frameStatus)        
 
         frameTitle = Frame(self.master)
         frameTitle.pack()

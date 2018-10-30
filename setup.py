@@ -10,7 +10,7 @@ setup(name='cb_idcheck',
         'Programming Language :: Python :: 3.6'
       ],
       url='http://github.com/commerceblock/cb_idcheck',
-      author='Lawrence Deacon',
+      author='CommerceBlock',
       author_email='lawrence.deacon@gmail.com',
       license='MIT',
       packages=['cb_idcheck'],
