@@ -21,9 +21,8 @@ Main modules:
 
 A GUI for sumbitting customer ID details to the idcheck vendor (e.g. Onfido).
 
-Run::
-
-	>>> python idcheck.py
+Run:
+	`python idcheck.py`
 
 
 ### database
@@ -55,21 +54,15 @@ If the argument --ngrok True is passed then the client will:
    - use the url established by ngrok to register a new webhook with the ID check vendor and import the authentication token
    - begin monitoring the above webhook for new ID check results or updates
 
-Example ::
+Example 
 
-	>>> python webhook.py --ngrok True
-
-Note: the webhook tunnel (ngrok process) will be closed when the program exists normally e.g. receives the SIGINT (Ctrl-C) or SIGTERM signal. However, 
-if the webhook.py process is terminated with the KILL signal then the ngrok process will have to be terminated manually, e.g.
-
-        >>> ps ux | grep ngrok
-	>>> kill <ngrok PID>
+	`python webhook.py --ngrok True`
 
 #### Monitor an existing webhook
 
 To begin monitoring an existing webhook:
 	      
-	>>> python webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False
+	`python webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False`
 
 	Defaults:
 	-token: $IDCHECK_WEBHOOK_TOKEN - the webhook authentication token supplied by the idcheck vendor when registering the webhook.
@@ -83,7 +76,7 @@ A client to update a node whitelist with additions and updates to the the mongdb
 
 To start the client:
    
-	>>> python watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS
+	`python watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS`
 
 	Defaults:
 	-rpcconnect: $HOST - the ip address of the whitelist node. 
