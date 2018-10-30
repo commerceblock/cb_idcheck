@@ -14,5 +14,5 @@ setup(name='cb_idcheck',
       author_email='lawrence.deacon@gmail.com',
       license='MIT',
       packages=['cb_idcheck'],
-      install_requires=['onfido', 'python-magic', 'flask', 'simplejson'],
+      install_requires=['onfido', 'python-magic', 'flask', 'simplejson', 'numpy'],
       zip_safe=False)

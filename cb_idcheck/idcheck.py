@@ -1,7 +1,8 @@
 from __future__ import print_function
 import sys
+import tkinter
 from tkinter import *
-import tkinter as tk
+from tkinter.ttk import *
 import time
 import datetime
 from cb_idcheck import cb_onfido
@@ -23,6 +24,7 @@ class idcheck:
         self.master=master
         self.title="CommerceBlock ID check"
         self.keys=[]
+        self.progress_value=0
 
     def run(self):
         self.id_api=cb_onfido.cb_onfido()
@@ -32,14 +34,29 @@ class idcheck:
         self.address=self.id_api.onfido.Address()
         self.check=self.id_api.onfido.CheckCreationRequest(async=True)
         self.check.type='express'
-        self.report=self.id_api.onfido.Report()
-#        self.report.name='identity'
-        self.report.name='document'
-        self.check.reports=[self.report]
+        #Fill the reports list with the required reports
+        self.check.reports=[]
+        self.check.reports.append(self.id_api.onfido.Report())
+        self.check.reports[-1].name='document'
+        self.check.reports.append(self.id_api.onfido.Report())
+        self.check.reports[-1].name='facial_similarity'
+        self.check.reports[-1].variant='standard'
+        self.check.reports.append(self.id_api.onfido.Report())
+        self.check.reports[-1].name='identity'
+        self.check.reports[-1].variant='kyc'
+        self.check.reports.append(self.id_api.onfido.Report())
+        self.check.reports[-1].name='watchlist'
+        self.check.reports[-1].variant='kyc'
+
 
         frameStatus = Frame(self.master)
         frameStatus.pack(side=BOTTOM, fill=X)
         self.status=statusbar(frameStatus)        
+
+        frameProgress = Frame(self.master)
+        frameProgress.pack(side=BOTTOM, fill=X)
+        self.progress=Progressbar(frameProgress, orient='horizontal', mode='indeterminate', value=self.progress_value) 
+        self.progress.pack(side=LEFT, fill=BOTH, expand=1)
 
         frameTitle = Frame(self.master)
         frameTitle.pack()
@@ -149,13 +166,14 @@ class idcheck:
         labelIDDocType = Label(frameIDDocType, text='ID document type')
         labelIDDocType.pack(side=LEFT)
 
-#        framePhoto = Frame(self.master)
-#        framePhoto.pack()
-#        self.entryPhoto = Entry(framePhoto, width=25)
-#        self.entryPhoto.pack(side=LEFT)
-#        self.entryPhoto.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
-#        buttonPhotoFileOpen = Button(framePhoto, text='Photo', command=self.openPhotoFile)
-#        buttonPhotoFileOpen.pack(side=LEFT)
+        framePhoto = Frame(self.master)
+        framePhoto.pack()
+        self.entryPhoto = Entry(framePhoto, width=25)
+        self.entryPhoto.pack(side=LEFT)
+        self.entryPhoto.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+        buttonPhotoFileOpen = Button(framePhoto, text='Live photo', command=self.openPhotoFile)
+        buttonPhotoFileOpen.pack(side=LEFT)
+
         
         labelAddress = Label(self.master, text='Address')
         labelAddress.pack()
@@ -209,7 +227,7 @@ class idcheck:
 
         frameSubmit = Frame(self.master)
         frameSubmit.pack(side=BOTTOM, fill=X)
-        buttonSubmit = Button(frameSubmit, text='Submit', command=self.submit)
+        buttonSubmit = Button(frameSubmit, text='Submit ID check', command=self.submit)
         buttonSubmit.pack(side=RIGHT)
 
 
@@ -228,7 +246,6 @@ class idcheck:
         self.applicant.addresses=[self.address]
 
     def fillIDDocument(self):
-        print(self.listboxIDDocType.curselection()[0])
         self.idDocType=self.docTypes[self.listboxIDDocType.curselection()[0]]
         self.idDoc2Sided=(self.docTypeSides[self.idDocType] == 1)
         self.idDocSide1File=self.entryIDDoc1.get()
@@ -242,25 +259,43 @@ class idcheck:
             api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="back", file=self.idDocSide2File))
         self.status.set("...id document upload complete.")
         return api_response
+
+    def fillPhoto(self):
+        self.photoFile=self.entryPhoto.get()
+
+    def uploadPhoto(self):
+        self.status.set("Uploading live photo...")
+        api_response = self.api_instance.upload_live_photo(applicant_id=self.applicant.id, file=self.photoFile, advanced_validation=True)
+        self.status.set("...live photo upload complete.")
+        return api_response
                 
     def fillKeys(self):
         self.check.tags=self.keys
             
     def submit(self):
+        self.progress.start()
         self.status.set("Submitting...")
         self.fillApplicant()
         self.fillAddress()
         self.fillIDDocument()
+        self.fillPhoto()
         self.loadKeys()
         self.fillKeys()
         try:
             api_response = self.api_instance.create_applicant(data=self.applicant)
             self.applicant.id=api_response.id
             api_response=self.uploadIDDocument()
+            api_response=self.uploadPhoto()
             api_response=self.api_instance.create_check(self.applicant.id, data=self.check)
+            self.status.set("Submission complete.")
+            print("Submission complete.")
+            time.sleep(1)
+            self.master.quit()
         except cb_onfido.ApiException as e:
             pprint(e.body)
             self.status.set("Error: " + e.body)
+        self.progress.stop()
+
 
  
     def openIDDocFile1(self):
@@ -296,7 +331,7 @@ class idcheck:
 
 if __name__ == "__main__":
     from cb_idcheck import idcheck
-    root = tk.Tk()
+    root = tkinter.Tk()
     idc=idcheck.idcheck(root)
     idc.parse_args()
     root.title(idc.title)

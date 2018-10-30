@@ -11,6 +11,8 @@ from datetime import datetime
 import urllib, os
 import argparse
 import subprocess, sys, time
+import smtplib
+from email.mime.text import MIMEText
 
 PYTHON=sys.executable
 SCRIPT=__file__
@@ -21,7 +23,8 @@ class webhook:
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
                  ngrok=False, 
-                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
+                 email_password=""):
         self.app = Flask(__name__)
         self.cust_record=record.record()
         self.id_api=cb_onfido.cb_onfido(idcheck_token)
@@ -33,6 +36,7 @@ class webhook:
         self.ngrok=ngrok
         self.ngrok_process=None
         self.port=port
+        self.email_password=email_password
 
 
 
@@ -45,6 +49,7 @@ class webhook:
         parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG", default=self.log)
         parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
+        parser.add_argument('--email_password', required=False, type=str, help="Email password.", default=self.email_password)
         args = parser.parse_args(argv)
         self.token = args.token
         self.url=args.url
@@ -52,6 +57,7 @@ class webhook:
         self.log=args.log
         self.id_api.set_token(args.idcheck_token)
         self.ngrok=args.ngrok
+        self.email_password=args.email_password
 
     def authenticate(self, request):
         key = urllib.parse.quote_plus(self.token).encode()
@@ -77,6 +83,15 @@ class webhook:
         print("route: " + self.route)
         return self.url
 
+    def send_report(self, applicant_check, subject='no subject'):
+        msg=MIMEText(str(applicant_check[0]) + " " + str(applicant_check[1]))
+        msg['Subject']=subject
+        msg['From']='idcheck@commerceblock.com'
+        msg['To']='lawrence@commerceblock.com'
+        s = smtplib.SMTP(host='smtp.gmail.com', port=587)
+        s.login("lawrence@commerceblock.com", self.email_password)
+        s.sendmail('idcheck@commerceblock.com', 'lawrence@commerceblock.com', msg.as_string())
+
     def route_webhook(self):
         @self.app.route(self.route, methods=['POST'])
         def webhook():
@@ -86,10 +101,21 @@ class webhook:
                 abort(401) 
             if(request.json["payload"]["action"]=="check.completed"):
                 applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
+                print(applicant_check)
                 if(applicant_check[1].result=="clear"):
                     self.cust_record.import_from_applicant_check(applicant_check)
                     self.db.addToWhitelist(self.cust_record)
+                    self.print('ID Check result: passed')
                     return 'Added addresses to whitelist.', 200
+                #The check returned 'consider' status so human intervention is required.
+                elif(applicant_check[1].result=="consider"):
+                    print('ID Check result: consider')
+                    print(applicant_check)
+                    
+                #The check returned a failure and will be logged.
+                else:
+                    self.print('ID Check result: fail')
+                    print(applicant_check)
             if(request.json["payload"]["action"]=="test_action"):
                 print('Test successful.')
                 return 'Test successful.', 200
