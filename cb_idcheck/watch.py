@@ -42,50 +42,29 @@ class watch:
         self.dbpassword=args.dbpassword
 
     def add_keys(self, addresses, keys):
-
         for address,key in zip(addresses,keys):
-            print(address)
-            print(key)
             self.ocean.addtowhitelist(str(address), str(key))
 
     def download_keys(self):
         print('downloading all keys from whitelist database to node memory....')
         for document in self.db.whitelist.find():
             self.add_keys(document['addresses'], document['keys'])
+        print('download completed.')
 
     def update_change(self, change):
         print(change)
 
-    def add_change(self, chang):
+    def add_change(self, change):
         doc=change['fullDocument']
         self.rec._id=doc['_id']
-
-        self.rec.import_keys(doc['keys'])
-        self.rec.import_addresses(doc['addresses'])
-
-
-
-        keyChangesList=doc['keys']
-        self.rec.keys = []
-        for keylist in keyChangesList:
-            for key in keylist:
-                self.rec.keys.append(key)
-        addrChangesList=doc['addresses']
-        self.rec.addresses = []
-        for addrlist in addrChangesList:
-            for addr in addrlist:
-                self.rec.addresses.append(addr)
-
-
-
-
+        self.rec.keys=doc['keys']
+        self.rec.addresses=doc['addresses']
         print('adding keys to whitelist for customer id: '+ str(self.rec._id))
         self.add_keys(self.rec.addresses, self.rec.keys)
+        print('adding keys completed.')
 
     def run(self):
         #Start database
-        print(self.dbuser)
-        print(self.dbpassword)
         self.db = database(username=self.dbuser, password=self.dbpassword)
         self.db.connect()
 
@@ -103,6 +82,7 @@ class watch:
                     self.update_change(change)
                 if(change['operationType']=='insert'):
                     self.add_change(change)
+                print('watching database for changes...')
 
 if __name__ == "__main__":
     from cb_idcheck import watch

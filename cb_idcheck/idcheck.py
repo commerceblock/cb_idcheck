@@ -30,7 +30,7 @@ class idcheck:
         self.api_instance=self.id_api.api_instance
         self.applicant=self.id_api.onfido.Applicant()
         self.address=self.id_api.onfido.Address()
-        self.check=self.id_api.onfido.CheckCreationRequest()
+        self.check=self.id_api.onfido.CheckCreationRequest(async=True)
         self.check.type='express'
         self.report=self.id_api.onfido.Report()
 #        self.report.name='identity'
@@ -240,13 +240,11 @@ class idcheck:
         api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="front", file=self.idDocSide1File))
         if (self.idDoc2Sided==True):
             api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="back", file=self.idDocSide2File))
-        self.status.set("...upload complete.")
+        self.status.set("...id document upload complete.")
         return api_response
                 
     def fillKeys(self):
         self.check.tags=self.keys
-        pprint('*** keys loaded to check: ***')
-        pprint(self.check.tags)
             
     def submit(self):
         self.status.set("Submitting...")
@@ -257,12 +255,9 @@ class idcheck:
         self.fillKeys()
         try:
             api_response = self.api_instance.create_applicant(data=self.applicant)
-            print(api_response)
             self.applicant.id=api_response.id
             api_response=self.uploadIDDocument()
-            print(api_response)
             api_response=self.api_instance.create_check(self.applicant.id, data=self.check)
-            pprint(api_response)
         except cb_onfido.ApiException as e:
             pprint(e.body)
             self.status.set("Error: " + e.body)
@@ -298,10 +293,6 @@ class idcheck:
             dictReader = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['tweaked_address', 'untweaked_public_key'],dialect=myDialect)
             for row in dictReader:
                 self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
-                
-                pprint('*** Keys loaded: ***')
-                pprint(self.keys)
-
 
 if __name__ == "__main__":
     from cb_idcheck import idcheck

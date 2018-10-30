@@ -34,17 +34,12 @@ class record:
                     self.addresses = self.addresses+[row['address']]
                     self.keys = self.keys+[row['key']]
 
-                print('record.py: addresses: ' +  self.addresses)
-                print('record.py: keys: ' +  self.keys)
-
     def setDate(self):
         self.created_utc=str(datetime.datetime.utcnow())
         self.updated_utc=self.created_utc
 
     #Import the ID and keys from a applicant_check = [applicant, check]
     def import_from_applicant_check(self, applicant_check):
-        print(applicant_check[0])
-        print(applicant_check[1])
         self._id=applicant_check[0].id
         self.addresses=applicant_check[1].tags[::2]
         self.keys=applicant_check[1].tags[1::2]

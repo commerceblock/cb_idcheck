@@ -1,6 +1,6 @@
 #Deletes the entire whitelist collection from the mongodb database
 
-from cb_idcheck import database 
+from cb_idcheck.database import database 
 
 print("Connecting to db...")
 db = database()
