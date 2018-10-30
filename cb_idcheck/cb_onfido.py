@@ -9,20 +9,18 @@ from pprint import pprint
 
 class cb_onfido:
       #Set the authentication foken for connection to onfido
-      def set_token(self, token):
+      def init_api(self, token):
             self.token=token
-            self.onfido.configuration.api_key['Authorization'] = 'token=' + self.token
+            if(self.token != None):
+                  print('starting Onfido API - token: ' + self.token)
+                  self.onfido.configuration.api_key['Authorization'] = 'token=' + self.token
+                  self.api_instance = self.onfido.DefaultApi()
 
-      def __init__(self, token):
-            __init__(self)
-            set_token(token)
-
-      def __init__(self):
+      def __init__(self, token=os.environ.get('IDCHECK_API_TOKEN', None)):
             self.record = record()
             self.onfido = onfido
-            self.set_token(os.environ.get('IDCHECK_API_TOKEN', None))
-            self.onfido.configuration.api_key_prefix['Authorization'] = 'Token'
-            self.api_instance = self.onfido.DefaultApi()
+            self.init_api(token)
+
 
       #Retrieve report from href.
       def find_report(self,href):

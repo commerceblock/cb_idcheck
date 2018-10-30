@@ -8,7 +8,7 @@ import argparse
 import itertools
 
 class watch:
-    def __init__(self, dbuser=default=os.environ['MONGODB_USER'], dbpassword=default=os.environ['MONGODB_PASS']):
+    def __init__(self, dbuser=os.environ['MONGODB_USER'], dbpassword=os.environ['MONGODB_PASS']):
         self.rec = record()        
         self.conf = {} #Ocean daemon config
         self.dbuser=dbuser #Database login details
@@ -41,12 +41,30 @@ class watch:
         self.dbuser=args.dbuser
         self.dbpassword=args.dbpassword
 
-    def updatewhitelist(self, change):
-        a=1
+    def add_keys(self, addresses, keys):
 
-    def addtowhitelist(self, change):
+        for address,key in zip(addresses,keys):
+            print(address)
+            print(key)
+            self.ocean.addtowhitelist(str(address), str(key))
+
+    def download_keys(self):
+        print('downloading all keys from whitelist database to node memory....')
+        for document in self.db.whitelist.find():
+            self.add_keys(document['addresses'], document['keys'])
+
+    def update_change(self, change):
+        print(change)
+
+    def add_change(self, chang):
         doc=change['fullDocument']
         self.rec._id=doc['_id']
+
+        self.rec.import_keys(doc['keys'])
+        self.rec.import_addresses(doc['addresses'])
+
+
+
         keyChangesList=doc['keys']
         self.rec.keys = []
         for keylist in keyChangesList:
@@ -58,11 +76,11 @@ class watch:
             for addr in addrlist:
                 self.rec.addresses.append(addr)
 
+
+
+
         print('adding keys to whitelist for customer id: '+ str(self.rec._id))
-        for address,key in zip(self.rec.addresses,self.rec.keys):
-            print('key:' + key)
-            print('address:' + address)
-            self.ocean.addtowhitelist(address, key)
+        self.add_keys(self.rec.addresses, self.rec.keys)
 
     def run(self):
         #Start database
@@ -73,16 +91,18 @@ class watch:
 
         #Connect to node
         self.ocean = getelementsd(self.conf)
-        print("Block count: " + str(self.ocean.getblockcount()))
+        print("connected to node - block count: " + str(self.ocean.getblockcount()))
 
-        print('watch started.')
+        self.download_keys()
+        
+        print('watching database for changes...')
         with self.db.whitelist.watch() as stream:
             for change in stream:
                 print('change to db detected:')
                 if(change['operationType']=='update'):
-                    self.updatewhitelist(change)
+                    self.update_change(change)
                 if(change['operationType']=='insert'):
-                    self.addtowhitelist(change)
+                    self.add_change(change)
 
 if __name__ == "__main__":
     from cb_idcheck import watch

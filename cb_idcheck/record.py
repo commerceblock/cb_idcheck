@@ -34,6 +34,9 @@ class record:
                     self.addresses = self.addresses+[row['address']]
                     self.keys = self.keys+[row['key']]
 
+                print('record.py: addresses: ' +  self.addresses)
+                print('record.py: keys: ' +  self.keys)
+
     def setDate(self):
         self.created_utc=str(datetime.datetime.utcnow())
         self.updated_utc=self.created_utc

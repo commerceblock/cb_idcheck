@@ -8,17 +8,24 @@ import os
 import argparse
 
 class database:
-    def __init__(self,username=urllib.parse.quote_plus(os.environ.get('MONGODB_USER', None)), 
-                 password=urllib.parse.quote_plus(os.environ.get('MONGODB_PASS', None)), 
-                 port=os.environ['MONGODB_PORT'], host='mongodbhost', 
-                 authSource=urllib.parse.quote_plus(os.environ.get('MONGODB_USER', None)),
+    def quote(self, val):
+        if(val):
+            return urllib.parse.quote_plus(val)
+        else:
+            return None
+
+    def __init__(self,username=os.environ.get('MONGODB_USER',None), 
+                 password=os.environ.get('MONGODB_PASS',None), 
+                 port=os.environ.get('MONGODB_PORT', None), host='mongodbhost', 
+                 authSource=os.environ.get('MONGODB_USER', None),
                  authMechanism='SCRAM-SHA-256'):
-        self.username=username
-        self.password=password
+        
+        self.username=self.quote(username)
+        self.password=self.quote(password)
         self.port=port
         self.host=host
-        self.authSource=authSource
-        self.authMechanism=authMechanism
+        self.authSource=self.quote(authSource)
+        self.authMechanism=self.quote(authMechanism)
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()

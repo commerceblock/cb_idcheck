@@ -16,7 +16,7 @@ PYTHON=sys.executable
 SCRIPT=__file__
 
 class webhook:
-    def __init__(self, token=default=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
+    def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
                  url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
@@ -24,7 +24,7 @@ class webhook:
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
         self.app = Flask(__name__)
         self.cust_record=record.record()
-        self.id_api=cb_onfido.cb_onfido(idcheck_token)
+        self.idcheck_token=idcheck_token
         self.db=database.database()
         self.route='/'
         self.url=url
@@ -32,21 +32,25 @@ class webhook:
         self.log=log
         self.ngrok=ngrok
         self.ngrok_process=None
+        self.port=port
+
+    def start_id_api(self):
+        self.id_api=cb_onfido.cb_onfido(self.idcheck_token)
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
         parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
         parser.add_argument('--url', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_URL", default=self.url)
         parser.add_argument('--port', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
-        parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG", self.log)
-        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
+        parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG", default=self.log)
+        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.idcheck_token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
         args = parser.parse_args(argv)
         self.token = args.token
         self.url=args.url
         self.port=args.port
         self.log=args.log
-        self.id_api.set_token(args.idcheck_token)
+        self.idcheck_token=args.idcheck_token
         self.ngrok=args.ngrok
 
     def authenticate(self, request):
@@ -92,6 +96,8 @@ class webhook:
             abort(400)
                 
     def run(self):
+        self.start_id_api()
+        time.sleep(5)
         if(self.ngrok==True):
             self.start_ngrok()
             self.get_ngrok_ipaddress()
