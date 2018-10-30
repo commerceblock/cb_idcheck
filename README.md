@@ -3,7 +3,7 @@
 Tools for managing a whitelisting database for a Ocean (https://github.com/commerceblock/ocean) sidechain.
 
 ## Installation
-1. `python3 setup.py build && python3 setup.py install`
+   `python3 setup.py build && python3 setup.py install`
 
 
 ## Overview
@@ -15,9 +15,9 @@ Main modules:
 #. webhook - webhook monitoring daemon for changes returned from Onfido following submission of an ID check.
 #. watch - daemon for updating the local node whitelist in response to changes to a mongodb database.
 
-##Modules
+## Modules
 
-###idcheck
+### idcheck
 
 A GUI for sumbitting customer ID details to the idcheck vendor (e.g. Onfido).
 
@@ -26,7 +26,7 @@ Run::
 	>>> python idcheck.py
 
 
-###database
+### database
 
 Interface to the whitelisting database.
 
@@ -44,11 +44,11 @@ Defaults:
 
 Example use: see database.test() in database.py 
 
-###webhook
+### webhook
 
 A client that monitors a webhook for updates from the id check vendor (e.g. Onfido) and publishes the whitelisted keys to a mongdb database.
 
-####Automatically open and register a new webhook
+#### Open and register a new webhook
 
 If the argument --ngrok True is passed then the client will:
    - create a https tunnel from the the local host to the internet using ngrok 
@@ -65,7 +65,7 @@ if the webhook.py process is terminated with the KILL signal then the ngrok proc
         >>> ps ux | grep ngrok
 	>>> kill <ngrok PID>
 
-####Monitor an existing webhook
+#### Monitor an existing webhook
 
 To begin monitoring an existing webhook:
 	      
@@ -78,7 +78,7 @@ To begin monitoring an existing webhook:
 	-log: $IDCHECK_LOG if it exists, otherwise '/usr/local/var/log/cb_idcheck.log' - webhook access/authentication log.
 	-ngrok: False
 
-###watch
+### watch
 A client to update a node whitelist with additions and updates to the the mongdb whitelist database.
 
 To start the client:
