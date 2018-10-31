@@ -102,16 +102,16 @@ class webhook:
             if(request.json["payload"]["action"]=="check.completed"):
                 applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
                 print(applicant_check)
+                self.cust_record.import_from_applicant_check(applicant_check)
                 if(applicant_check[1].result=="clear"):
-                    self.cust_record.import_from_applicant_check(applicant_check)
                     self.db.addToWhitelist(self.cust_record)
                     self.print('ID Check result: passed')
                     return 'Added addresses to whitelist.', 200
                 #The check returned 'consider' status so human intervention is required.
                 elif(applicant_check[1].result=="consider"):
                     print('ID Check result: consider')
-                    print(applicant_check)
-                    
+                    self.db.addToConsiderlist(applicant_check)
+                    return 'Added addresses to considerlist.', 200
                 #The check returned a failure and will be logged.
                 else:
                     self.print('ID Check result: fail')

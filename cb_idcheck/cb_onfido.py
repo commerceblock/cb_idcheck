@@ -47,16 +47,19 @@ class cb_onfido:
 
 
       #Retrieves the applicant and check from the href.
-      def find_applicant_check(self,href):
-            applicant_search="/applicants/"
-            applicant_start=href.find(applicant_search)+len(applicant_search)
-            applicant_end=href.find('/',applicant_start)
-            applicant_id=href[applicant_start:applicant_end]
+      def find_applicant_check(self,href=None, applicant_id=None, check_id=None):
+            if(applicant_id == None || check_id == None):
+                  if(href != None):
+                        applicant_search="/applicants/"
+                        applicant_start=href.find(applicant_search)+len(applicant_search)
+                        applicant_end=href.find('/',applicant_start)
+                        applicant_id=href[applicant_start:applicant_end]
 
-            check_search="/checks/"
-            check_start=href.find(check_search)+len(check_search)
-            check_id=href[check_start:]
-
+                        check_search="/checks/"
+                        check_start=href.find(check_search)+len(check_search)
+                        check_id=href[check_start:]
+                  else:
+                        return None
             
             try:
                   api_response_applicant = self.api_instance.find_applicant(applicant_id)
@@ -73,6 +76,7 @@ class cb_onfido:
                   return None
 
             return [api_response_applicant, api_response_check]
+
 
 #Retrieves check and report from a href and applicant id.
       def find_check_report(self,href, applicant_id=None):
@@ -101,9 +105,9 @@ class cb_onfido:
             return [api_response_check, api_response_report]
 
       def test(self):
+            db = database() 
 #Get the data from onfido - the hrefs will be given in the webhook
             applicant_check=self.find_applicant_check('https://api.onfido.com/v2/applicants/2bc75038-4776-464c-807d-7d7ad21a08ce/checks/cd210ae4-f487-43da-9f7a-21de0ac43550')
-            db = database()
             rec = record.record()
 #Fill a record object
             rec.import_from_applicant_check(applicant_check)
@@ -133,6 +137,30 @@ class cb_onfido:
                   pprint(e.body)
             return self.webhook
 
+      def list_checks(self, customer_id):
+            #Find customer from id
+            #Find all checks for customer and put them in an array
+            #Return the array
+            checks_list = []
+            templist= []
+            while(True):
+                  try:
+                        templist=self.api_instance.list_checks(customer_id)
+                  except: ApiException as e:
+                        pprint(e.body)
+                  if(len(templist)>0):
+                        checks_list.extend(templist)
+                  else:
+                        break
+            return checks_list
+                  
+            
+
+      def destroy_applicant(self, applicant_id):
+            try:
+                  self.api_instance.destroy_applicant(applicant_id)
+            except: ApiException as e:
+                  pprint(e.body)
 
             
 if __name__ == "__main__":

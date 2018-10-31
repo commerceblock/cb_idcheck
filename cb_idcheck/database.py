@@ -46,13 +46,12 @@ class database:
                       authMechanism=self.authMechanism)
         self.db = self.client[self.authSource]
         self.whitelist=self.db.whitelist
+        self.considerlist=self.db.considerlist
 
     def addToWhitelist(self, customer_record : record):
         #Set the date of the record to the current time.
         customer_record.setDate()
         #Update the record using _id as filter. Add the keys and addresses to the arrays, if not already in the arrays. Change the updated date. Insert the record if no such record exists.
-#return self.whitelist.update_one({'_id': customer_record._id}, {'$addToSet': {'addresses' : customer_record.addresses, 'keys' : customer_record.keys}, '$set': {'updated_utc' : customer_record.updated_utc}, '$setOnInsert': {'created_utc': customer_record.created_utc}}, upsert=True).upserted_id
-
         return self.whitelist.update_one({'_id': customer_record._id}, 
                 {
                 '$addToSet': {
@@ -62,7 +61,19 @@ class database:
                 '$setOnInsert': {'created_utc': customer_record.created_utc}
         }, upsert=True).upserted_id
 
-#        return self.whitelist.update_one({'_id': customer_record._id}, {'$addToSet': {'addresses' { '$each'  : customer_record.addresses} } }, {'$addtoSet': {'keys' : { '$each' customer_record.keys} } }, {'$set': {'updated_utc' : customer_record.updated_utc} }, {'$setOnInsert': {'created_utc': customer_record.created_utc} }, upsert=True).upserted_id
+    def addToConsiderlist(self, applicant_check):
+        #Set the date of the record to the current time.
+        customer_record.setDate()
+        #Update the record using _id as filter. Change the updated date. Insert the record if no such record exists.
+        #Each applicant can be associates with several checks with varying passports/keys/etc. 
+        #Therefore each check need to be considered individually. The check ids are appended to an array.
+        return self.considerlist.update_one({'_id': applicant_check[0].id}, 
+                {
+                '$addToSet':{ 'checks' : applicant_check[1].id},
+                '$set':{'updated_utc' : customer_record.updated_utc},
+                '$setOnInsert': {'created_utc': customer_record.created_utc}
+        }, upsert=True).upserted_id
+
 
     def getFromID(self,_id):
         return self.whitelist.find_one({"_id" : _id})
