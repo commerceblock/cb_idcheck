@@ -96,24 +96,26 @@ Example
 	`python process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN`	
 
 
-Arguments:                                                                     
-  --username USERNAME   DB username
-  --password PASSWORD   DB password
-  --port PORT           DB port
-  --host HOST           DB host
-  --authsource AUTHSOURCE
+	Arguments:                                                                     
+  	-username USERNAME   DB username
+  	-password PASSWORD   DB password
+  	-port PORT           DB port
+  	-host HOST           DB host
+  	-authsource AUTHSOURCE
                         DB authSource
-  --authmechanism AUTHMECHANISM
+  	-authmechanism AUTHMECHANISM
                         DB authMechanism
-  --idcheck_token IDCHECK_TOKEN
-                        ID check vendor (e.g. Onfido) API token.
-                        Default=$IDCHECK_API_TOKEN
+  	-idcheck_token IDCHECK_TOKEN
+         	       ID check vendor (e.g. Onfido) API token.
+                       Default=$IDCHECK_API_TOKEN
+		    
 
-Defaults:
---username: $MONGODB_USER
---password: $MONGODB_PASS
---port: $MONGODB_PORT
---host: mongodbhost (defined in /etc/hosts)
---authsource: $MONGODB_USER
---authmechanism: 'SCRAM-SHA-256'
---idcheck_token: $IDCHECK_API_TOKEN
+		    
+		Defaults:
+		-username: $MONGODB_USER
+		-password: $MONGODB_PASS
+		-port: $MONGODB_PORT
+		-host: mongodbhost (defined in /etc/hosts)
+		-authsource: $MONGODB_USER
+		-authmechanism: 'SCRAM-SHA-256'
+-		idcheck_token: $IDCHECK_API_TOKEN
