@@ -65,11 +65,11 @@ To begin monitoring an existing webhook:
 	`python webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False`
 
 	Defaults:
-	-token: $IDCHECK_WEBHOOK_TOKEN - the webhook authentication token supplied by the idcheck vendor when registering the webhook.
-	-port: $IDCHECK_WEBHOOK_PORT 
-	-url: $IDCHECK_WEBHOOK_URL 
-	-log: $IDCHECK_LOG if it exists, otherwise '/usr/local/var/log/cb_idcheck.log' - webhook access/authentication log.
-	-ngrok: False
+	- token: $IDCHECK_WEBHOOK_TOKEN - the webhook authentication token supplied by the idcheck vendor when registering the webhook.
+	- port: $IDCHECK_WEBHOOK_PORT 
+	- url: $IDCHECK_WEBHOOK_URL 
+	- log: $IDCHECK_LOG if it exists, otherwise '/usr/local/var/log/cb_idcheck.log' - webhook access/authentication log.
+	- ngrok: False
 
 ### watch
 A client to update a node whitelist with additions and updates to the the mongdb whitelist database.
@@ -79,12 +79,12 @@ To start the client:
 	`python watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS`
 
 	Defaults:
-	-rpcconnect: $HOST - the ip address of the whitelist node. 
-	-rpcport: $PORT - the port of the whitelist node RPC server.
-	-rpcuser: $USER  
-	-rpcpassword: $PASS - the user name and password for the above (see the .conf file in the node data dir). 
-	-dbuser: $MONGODB_USER 
-	-dbpassword: $MONGODB_PASS - mongodb whitelist database user name and password.
+	- rpcconnect: $HOST - the ip address of the whitelist node. 
+	- rpcport: $PORT - the port of the whitelist node RPC server.
+	- rpcuser: $USER  
+	- rpcpassword: $PASS - the user name and password for the above (see the .conf file in the node data dir). 
+	- dbuser: $MONGODB_USER 
+	- dbpassword: $MONGODB_PASS - mongodb whitelist database user name and password.
 
 ### process_considerlist
 
@@ -96,26 +96,11 @@ Example
 	`python process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN`	
 
 
-	Arguments:                                                                     
-  	-username USERNAME   DB username
-  	-password PASSWORD   DB password
-  	-port PORT           DB port
-  	-host HOST           DB host
-  	-authsource AUTHSOURCE
-                        DB authSource
-  	-authmechanism AUTHMECHANISM
-                        DB authMechanism
-  	-idcheck_token IDCHECK_TOKEN
-         	       ID check vendor (e.g. Onfido) API token.
-                       Default=$IDCHECK_API_TOKEN
-		    
-
-		    
-		Defaults:
-		-username: $MONGODB_USER
-		-password: $MONGODB_PASS
-		-port: $MONGODB_PORT
-		-host: mongodbhost (defined in /etc/hosts)
-		-authsource: $MONGODB_USER
-		-authmechanism: 'SCRAM-SHA-256'
--		idcheck_token: $IDCHECK_API_TOKEN
+	Defaults:
+	- username: $MONGODB_USER
+	- password: $MONGODB_PASS
+	- port: $MONGODB_PORT
+	- host: mongodbhost (defined in /etc/hosts)
+	- authsource: $MONGODB_USER
+	- authmechanism: 'SCRAM-SHA-256'
+	- idcheck_token: $IDCHECK_API_TOKEN
