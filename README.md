@@ -85,3 +85,35 @@ To start the client:
 	-rpcpassword: $PASS - the user name and password for the above (see the .conf file in the node data dir). 
 	-dbuser: $MONGODB_USER 
 	-dbpassword: $MONGODB_PASS - mongodb whitelist database user name and password.
+
+### process_considerlist
+
+The result of some kyc checks is 'consider' due to e.g. missing information or adverse media. When this occurs, the details are added to a considerlist container in the same database as the whitelist container.
+This interactive script can be used to review the entries in the consider list and either accept or reject them for whitelisting.
+
+Example
+
+	`python process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN`	
+
+
+Arguments:                                                                     
+  --username USERNAME   DB username
+  --password PASSWORD   DB password
+  --port PORT           DB port
+  --host HOST           DB host
+  --authsource AUTHSOURCE
+                        DB authSource
+  --authmechanism AUTHMECHANISM
+                        DB authMechanism
+  --idcheck_token IDCHECK_TOKEN
+                        ID check vendor (e.g. Onfido) API token.
+                        Default=$IDCHECK_API_TOKEN
+
+Defaults:
+--username: $MONGODB_USER
+--password: $MONGODB_PASS
+--port: $MONGODB_PORT
+--host: mongodbhost (defined in /etc/hosts)
+--authsource: $MONGODB_USER
+--authmechanism: 'SCRAM-SHA-256'
+--idcheck_token: $IDCHECK_API_TOKEN
