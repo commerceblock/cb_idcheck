@@ -38,17 +38,21 @@ class cb_onfido:
 
             try:
                   api_response_report = self.api_instance.find_report(check_id, report_id)
-                  print(api_response_report)
             except ApiException as e:
                   pprint(e.body)
                   return None
 
             return api_response_report
 
+      def find_applicant(self, applicant_id):
+            try:
+                  return self.api_instance.find_applicant(applicant_id)
+            except ApiException as e:
+                  pprint(e.body)
 
       #Retrieves the applicant and check from the href.
       def find_applicant_check(self,href=None, applicant_id=None, check_id=None):
-            if(applicant_id == None || check_id == None):
+            if((applicant_id == None) or (check_id == None)):
                   if(href != None):
                         applicant_search="/applicants/"
                         applicant_start=href.find(applicant_search)+len(applicant_search)
@@ -63,14 +67,12 @@ class cb_onfido:
             
             try:
                   api_response_applicant = self.api_instance.find_applicant(applicant_id)
-                  print(api_response_applicant)
             except ApiException as e:
                   pprint(e.body)
                   return None
 
             try:
                   api_response_check = self.api_instance.find_check(applicant_id, check_id)
-                  print(api_response_check)
             except ApiException as e:
                   pprint(e.body)
                   return None
@@ -90,14 +92,12 @@ class cb_onfido:
 
             try:
                   api_response_check = self.api_instance.find_check(applicant_id, check_id)
-                  print(api_response_check)
             except ApiException as e:
                   pprint(e.body)
                   return None
 
             try:
                   api_response_report = self.find_report(href)
-                  print(api_response_report)
             except ApiException as e:
                   pprint(e.body)
                   return None
@@ -138,28 +138,39 @@ class cb_onfido:
             return self.webhook
 
       def list_checks(self, customer_id):
-            #Find customer from id
             #Find all checks for customer and put them in an array
-            #Return the array
             checks_list = []
             templist= []
+            n_page=1
             while(True):
                   try:
-                        templist=self.api_instance.list_checks(customer_id)
-                  except: ApiException as e:
+                        templist=self.api_instance.list_checks(customer_id, page=n_page)
+                  except ApiException as e:
                         pprint(e.body)
-                  if(len(templist)>0):
-                        checks_list.extend(templist)
+                  length = len(templist.checks)
+                  if(len(templist.checks)>0):
+                        checks_list.extend(templist.checks)
                   else:
                         break
+                  n_page = n_page+1
             return checks_list
-                  
-            
+
+
+      def list_reports(self, check_id):
+            #Find all reports for a check and put them in an array
+            reports_list = []
+            templist= []
+            n_page=1
+            try:
+                  reports_list=self.api_instance.list_reports(check_id)
+            except ApiException as e:
+                  pprint(e.body)
+            return reports_list.reports
 
       def destroy_applicant(self, applicant_id):
             try:
                   self.api_instance.destroy_applicant(applicant_id)
-            except: ApiException as e:
+            except ApiException as e:
                   pprint(e.body)
 
             

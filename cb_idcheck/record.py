@@ -4,21 +4,17 @@
 import csv
 import collections
 from pprint import pprint
-import datetime
 
 class record:
     def __init__(self, _id='',keys=[], addresses=[]):
         self._id=_id #applicant id
         self.addresses=addresses
         self.keys=keys
-        self.setDate()
 
     def get(self):
         return { "_id" : self._id,
                 "addresses" : self.addresses,
                 "keys" : self.keys,
-                "updated_utc" : self.updated_utc,
-                "created_utc" : self.created_utc
                  } 
     
     #Reads the keys from a key dump file.
@@ -33,10 +29,6 @@ class record:
                 for row in dictReader:
                     self.addresses = self.addresses+[row['address']]
                     self.keys = self.keys+[row['key']]
-
-    def setDate(self):
-        self.created_utc=str(datetime.datetime.utcnow())
-        self.updated_utc=self.created_utc
 
     #Import the ID and keys from a applicant_check = [applicant, check]
     def import_from_applicant_check(self, applicant_check):

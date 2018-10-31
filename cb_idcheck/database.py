@@ -36,6 +36,14 @@ class database:
         parser.add_argument('--authsource', required=False, default=self.username,type=str, help="authSource")
         parser.add_argument('--authmechanism', required=False, default=self.authMechanism,type=str, help="authMechanism")
         args = parser.parse_args(argv)
+        self.username=self.quote(args.username)
+        self.password=self.quote(args.password)
+        self.port=args.port
+        self.host=args.host
+        self.authSource=self.quote(args.authSource)
+        self.authMechanism=self.quote(args.authMechanism)
+
+
 
     def connect(self):
         self.client = pymongo.MongoClient(self.host,
@@ -49,37 +57,33 @@ class database:
         self.considerlist=self.db.considerlist
 
     def addToWhitelist(self, customer_record : record):
-        #Set the date of the record to the current time.
-        customer_record.setDate()
         #Update the record using _id as filter. Add the keys and addresses to the arrays, if not already in the arrays. Change the updated date. Insert the record if no such record exists.
         return self.whitelist.update_one({'_id': customer_record._id}, 
                 {
                 '$addToSet': {
                     'addresses' : { '$each' : customer_record.addresses},
                     'keys' : { '$each' : customer_record.keys}},
-                '$set':{'updated_utc' : customer_record.updated_utc},
-                '$setOnInsert': {'created_utc': customer_record.created_utc}
         }, upsert=True).upserted_id
 
     def addToConsiderlist(self, applicant_check):
         #Set the date of the record to the current time.
-        customer_record.setDate()
         #Update the record using _id as filter. Change the updated date. Insert the record if no such record exists.
         #Each applicant can be associates with several checks with varying passports/keys/etc. 
         #Therefore each check need to be considered individually. The check ids are appended to an array.
         return self.considerlist.update_one({'_id': applicant_check[0].id}, 
                 {
                 '$addToSet':{ 'checks' : applicant_check[1].id},
-                '$set':{'updated_utc' : customer_record.updated_utc},
-                '$setOnInsert': {'created_utc': customer_record.created_utc}
-        }, upsert=True).upserted_id
+                }, upsert=True).upserted_id
 
 
     def getFromID(self,_id):
         return self.whitelist.find_one({"_id" : _id})
 
-    def removeFromID(self, _id):
+    def removeFromID(self, _id=None):
         self.whitelist.remove({"_id" : _id})
+
+    def remove_from_considerlist(self, _id):
+        self.considerlist.remove({"_id" : _id})
 
     def test(self, keyFile=None):
         self.connect()

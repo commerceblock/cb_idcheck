@@ -95,27 +95,25 @@ class webhook:
     def route_webhook(self):
         @self.app.route(self.route, methods=['POST'])
         def webhook():
-            print('post received...')
             if not self.authenticate(request):
                 logging.warning('Python package cb_idcheck.webhook: ' + str(datetime.now()) + ': Message to webhook failed authentication. Request data: ' + request.data.decode("utf-8"))
                 abort(401) 
             if(request.json["payload"]["action"]=="check.completed"):
+                print('completed check received. applicant id = ' + str(self.cust_record._id))
                 applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
-                print(applicant_check)
                 self.cust_record.import_from_applicant_check(applicant_check)
                 if(applicant_check[1].result=="clear"):
                     self.db.addToWhitelist(self.cust_record)
-                    self.print('ID Check result: passed')
+                    print('ID Check result: clear. Added addresses to whitelist.')
                     return 'Added addresses to whitelist.', 200
                 #The check returned 'consider' status so human intervention is required.
                 elif(applicant_check[1].result=="consider"):
-                    print('ID Check result: consider')
+                    print('ID Check result: consider. Addding check to considerlist.')
                     self.db.addToConsiderlist(applicant_check)
                     return 'Added addresses to considerlist.', 200
                 #The check returned a failure and will be logged.
                 else:
-                    self.print('ID Check result: fail')
-                    print(applicant_check)
+                    print('ID Check result: fail')
             if(request.json["payload"]["action"]=="test_action"):
                 print('Test successful.')
                 return 'Test successful.', 200
@@ -127,9 +125,7 @@ class webhook:
             self.get_ngrok_ipaddress()
             webhook_api_response=self.id_api.create_webhook(url=self.url)
             self.token=webhook_api_response.token
-            print('webhook token:' + self.token)
 
-            
         #Configure logging
         logging.basicConfig(filename=self.log, level=logging.WARNING)
         #Connect to the whitelist database server
@@ -139,7 +135,6 @@ class webhook:
 
         #Start the Flask app
         self.app.run(host='localhost', port=self.port, use_reloader=False)
-
         self.cleanup()
 
     def cleanup(self):

@@ -6,6 +6,7 @@ import pymongo
 import datetime
 import argparse
 import itertools
+import time
 
 class watch:
     def __init__(self, dbuser=os.environ['MONGODB_USER'], dbpassword=os.environ['MONGODB_PASS']):
@@ -13,7 +14,7 @@ class watch:
         self.conf = {} #Ocean daemon config
         self.dbuser=dbuser #Database login details
         self.dbpassword=dbpassword
-        
+        self.count=0
 
     def set_rpcuser(self, val):
         self.conf["rpcuser"]=val
@@ -44,6 +45,7 @@ class watch:
     def add_keys(self, addresses, keys):
         for address,key in zip(addresses,keys):
             self.ocean.addtowhitelist(str(address), str(key))
+            self.count=self.count+1
 
     def download_keys(self):
         print('downloading all keys from whitelist database to node memory....')
@@ -72,7 +74,11 @@ class watch:
         self.ocean = getelementsd(self.conf)
         print("connected to node - block count: " + str(self.ocean.getblockcount()))
 
+        self.count=0
+        start=time.perf_counter()
         self.download_keys()
+        end=time.perf_counter()
+        print('downloaded ' + str(self.count) + ' key/address pairs in ' + str(end-start) + ' seconds.')
         
         print('watching database for changes...')
         with self.db.whitelist.watch() as stream:
