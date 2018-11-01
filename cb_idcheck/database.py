@@ -40,8 +40,8 @@ class database:
         self.password=self.quote(args.password)
         self.port=args.port
         self.host=args.host
-        self.authSource=self.quote(args.authSource)
-        self.authMechanism=self.quote(args.authMechanism)
+        self.authSource=self.quote(args.authsource)
+        self.authMechanism=self.quote(args.authmechanism)
 
 
 

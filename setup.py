@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
 
 setup(name='cb_idcheck',
@@ -13,6 +13,5 @@ setup(name='cb_idcheck',
       author='CommerceBlock',
       author_email='lawrence.deacon@gmail.com',
       license='MIT',
-      packages=['cb_idcheck'],
-      install_requires=['onfido', 'python-magic', 'flask', 'simplejson', 'numpy'],
-      zip_safe=False)
+      packages=['cb_idcheck', 'cb_idcheck.test_framework'],
+      install_requires=['onfido', 'python-magic', 'flask', 'simplejson', 'numpy', 'pymongo'])

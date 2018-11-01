@@ -24,8 +24,7 @@ class webhook:
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
                  ngrok=False, 
-                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
-                 email_password=""):
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
         self.app = Flask(__name__)
         self.cust_record=record.record()
         self.id_api=cb_onfido.cb_onfido(idcheck_token)
@@ -37,7 +36,6 @@ class webhook:
         self.ngrok=ngrok
         self.ngrok_process=None
         self.port=port
-        self.email_password=email_password
         self.idcheck=idcheck()
         
 
@@ -45,12 +43,11 @@ class webhook:
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
         parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
-        parser.add_argument('--url', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_URL", default=self.url)
-        parser.add_argument('--port', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
-        parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG", default=self.log)
+        parser.add_argument('--url', required=False, type=str, help="Webhook url. Default=$IDCHECK_WEBHOOK_URL", default=self.url)
+        parser.add_argument('--port', required=False, type=str, help="Webhook port. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
+        parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG, fallback=/usr/local/var/log/cb_idcheck.log", default=self.log)
         parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
-        parser.add_argument('--email_password', required=False, type=str, help="Email password.", default=self.email_password)
         args = parser.parse_args(argv)
         self.token = args.token
         self.url=args.url
@@ -58,7 +55,7 @@ class webhook:
         self.log=args.log
         self.id_api.set_token(args.idcheck_token)
         self.ngrok=args.ngrok
-        self.email_password=args.email_password
+
 
     def authenticate(self, request):
         key = urllib.parse.quote_plus(self.token).encode()
@@ -71,7 +68,7 @@ class webhook:
         self.ngrok_process=subprocess.Popen(["ngrok", "http", "--bind-tls=true", self.port], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
     def get_ngrok_tunnel_info(self):
-        time.sleep(5)
+        time.sleep(10)
         self.tunnel_info_process = subprocess.Popen(["curl", "http://127.0.0.1:4040/api/tunnels", "--connect-timeout", "10"], stdout=subprocess.PIPE)
         self.tunnel_info=json.loads(self.tunnel_info_process.communicate()[0].decode("UTF-8"))
         print(self.tunnel_info)
@@ -84,16 +81,6 @@ class webhook:
         print("route: " + self.route)
         return self.url
 
-    def send_report(self, applicant_check, subject='no subject'):
-        msg=MIMEText(str(applicant_check[0]) + " " + str(applicant_check[1]))
-        msg['Subject']=subject
-        msg['From']='idcheck@commerceblock.com'
-        msg['To']='lawrence@commerceblock.com'
-        s = smtplib.SMTP(host='smtp.gmail.com', port=587)
-        s.login("lawrence@commerceblock.com", self.email_password)
-        s.sendmail('idcheck@commerceblock.com', 'lawrence@commerceblock.com', msg.as_string())
-
-        
 #Verify that the check includes the prerequisite reports as stated in the config file
     def verify_check_content(self, report_list=None):
         if(report_list==None):
@@ -132,7 +119,7 @@ class webhook:
         @self.app.route(self.route, methods=['POST'])
         def webhook():
             if not self.authenticate(request):
-                logging.warning('Python package cb_idcheck.webhook: ' + str(datetime.now()) + ': Message to webhook failed authentication. Request data: ' + request.data.decode("utf-8"))
+                logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
                 abort(401) 
             if(request.json["payload"]["action"]=="check.completed"):
                 print('completed check received: ')

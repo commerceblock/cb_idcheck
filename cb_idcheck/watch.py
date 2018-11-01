@@ -1,6 +1,6 @@
 from cb_idcheck.database import database
 from cb_idcheck.record import record
-from federation.connectivity import getelementsd 
+from cb_idcheck.connectivity import getelementsd 
 import os
 import pymongo
 import datetime
