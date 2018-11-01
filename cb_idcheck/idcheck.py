@@ -12,6 +12,7 @@ import collections
 from cb_idcheck.statusbar import statusbar
 import argparse
 import os
+from cb_idcheck.idcheck_config import idcheck_config
 
 class idcheck:
     def parse_args(self, argv=None):
@@ -20,35 +21,19 @@ class idcheck:
         args = parser.parse_args(argv)
         self.token = args.token
 
-    def __init__(self, master):
+    def __init__(self, master=None):
         self.master=master
         self.title="CommerceBlock ID check"
         self.keys=[]
         self.progress_value=0
-
-    def run(self):
         self.id_api=cb_onfido.cb_onfido()
         # create an instance of the API class                                                                                                                                                     
         self.api_instance=self.id_api.api_instance
         self.applicant=self.id_api.onfido.Applicant()
         self.address=self.id_api.onfido.Address()
-        self.check=self.id_api.onfido.CheckCreationRequest(async=True)
-        self.check.type='express'
-        #Fill the reports list with the required reports
-        self.check.reports=[]
-        self.check.reports.append(self.id_api.onfido.Report())
-        self.check.reports[-1].name='document'
-        self.check.reports.append(self.id_api.onfido.Report())
-        self.check.reports[-1].name='facial_similarity'
-        self.check.reports[-1].variant='standard'
-        self.check.reports.append(self.id_api.onfido.Report())
-        self.check.reports[-1].name='identity'
-        self.check.reports[-1].variant='kyc'
-        self.check.reports.append(self.id_api.onfido.Report())
-        self.check.reports[-1].name='watchlist'
-        self.check.reports[-1].variant='kyc'
+        self.cfg=idcheck_config(self.id_api.onfido.CheckCreationRequest(async=True))
 
-
+    def run(self):
         frameStatus = Frame(self.master)
         frameStatus.pack(side=BOTTOM, fill=X)
         self.status=statusbar(frameStatus)        
@@ -270,7 +255,7 @@ class idcheck:
         return api_response
                 
     def fillKeys(self):
-        self.check.tags=self.keys
+        self.cfg.check.tags=self.keys
             
     def submit(self):
         self.progress.start()
@@ -286,7 +271,7 @@ class idcheck:
             self.applicant.id=api_response.id
             api_response=self.uploadIDDocument()
             api_response=self.uploadPhoto()
-            api_response=self.api_instance.create_check(self.applicant.id, data=self.check)
+            api_response=self.api_instance.create_check(self.applicant.id, data=self.cfg.check)
             self.status.set("Submission complete.")
             print("Submission complete.")
             time.sleep(1)

@@ -13,6 +13,7 @@ import argparse
 import subprocess, sys, time
 import smtplib
 from email.mime.text import MIMEText
+from cb_idcheck.idcheck import idcheck
 
 PYTHON=sys.executable
 SCRIPT=__file__
@@ -37,8 +38,8 @@ class webhook:
         self.ngrok_process=None
         self.port=port
         self.email_password=email_password
-
-
+        self.idcheck=idcheck()
+        
 
 
     def parse_args(self, argv=None):
@@ -92,6 +93,41 @@ class webhook:
         s.login("lawrence@commerceblock.com", self.email_password)
         s.sendmail('idcheck@commerceblock.com', 'lawrence@commerceblock.com', msg.as_string())
 
+        
+#Verify that the check includes the prerequisite reports as stated in the config file
+    def verify_check_content(self, report_list=None):
+        if(report_list==None):
+            report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
+        for report_req in self.idcheck.cfg.check.reports:
+            report_found=False
+            for report_comp in report_list:
+                if(self.compare_reports_by_type(report_req, report_comp)):
+                    report_found=True
+                    break
+            if (report_found == False):
+                return False
+        return True
+            
+#Compare the names and variants of the the two reports.
+#Unfortunately, the Onfido report query will return a variant as 'standard' by default even if no variant exists for the report type.
+#Therefore, as a work-around empty or 'None' variants are replaced with 'standard' for the purposes of this comparison.
+    def compare_reports_by_type(self, report1, report2):
+        v1=report1.variant
+        if(v1 != None):
+            v1.strip()
+        else:
+            v1='standard'
+        v2=report2.variant
+        if(v2 != None):
+            v2.strip()
+        else:
+            v2='standard'
+        if(report1.name != report2.name):
+            return False
+        if(v1 != v2):
+            return False
+        return True
+
     def route_webhook(self):
         @self.app.route(self.route, methods=['POST'])
         def webhook():
@@ -99,22 +135,28 @@ class webhook:
                 logging.warning('Python package cb_idcheck.webhook: ' + str(datetime.now()) + ': Message to webhook failed authentication. Request data: ' + request.data.decode("utf-8"))
                 abort(401) 
             if(request.json["payload"]["action"]=="check.completed"):
-                print('completed check received. applicant id = ' + str(self.cust_record._id))
-                applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
-                self.cust_record.import_from_applicant_check(applicant_check)
-                if(applicant_check[1].result=="clear"):
-                    self.db.addToWhitelist(self.cust_record)
-                    print('ID Check result: clear. Added addresses to whitelist.')
-                    return 'Added addresses to whitelist.', 200
-                #The check returned 'consider' status so human intervention is required.
-                elif(applicant_check[1].result=="consider"):
-                    print('ID Check result: consider. Addding check to considerlist.')
-                    self.db.addToConsiderlist(applicant_check)
-                    return 'Added addresses to considerlist.', 200
-                #The check returned a failure and will be logged.
+                print('completed check received: ')
+                pprint(request.json)
+                report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
+                if(self.verify_check_content(report_list) == False):
+                    print('ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck.cfg) +  '. The included report types are: ')
+                    pprint(report_list)
                 else:
-                    print('ID Check result: fail')
-            if(request.json["payload"]["action"]=="test_action"):
+                    applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
+                    self.cust_record.import_from_applicant_check(applicant_check)
+                    if(applicant_check[1].result=="clear"):
+                        self.db.addToWhitelist(self.cust_record)
+                        print('ID Check result: clear. Added addresses to whitelist.')
+                        return 'Added addresses to whitelist.', 200
+                #The check returned 'consider' status so human intervention is required.
+                    elif(applicant_check[1].result=="consider"):
+                        print('ID Check result: consider. Addding check to considerlist.')
+                        self.db.addToConsiderlist(applicant_check)
+                        return 'Added addresses to considerlist.', 200
+                #The check returned a failure and will be logged.
+                    else:
+                        print('ID Check result: fail')
+            elif(request.json["payload"]["action"]=="test_action"):
                 print('Test successful.')
                 return 'Test successful.', 200
             abort(400)
