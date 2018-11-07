@@ -7,6 +7,7 @@ RUN set -x \
     && python setup.py build \
     && python setup.py install \
     && cp depends/ngrok /usr/local/bin \
-    && mkdir -p /usr/local/var/log 
+    && mkdir -p /usr/local/var/log \
+    && cp docker-entrypoint.sh ../../
 
-CMD ["bash","-c"]
+ENTRYPOINT ["/docker-entrypoint.sh"]

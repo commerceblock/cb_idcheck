@@ -3,6 +3,7 @@ import sys
 import tkinter
 from tkinter import *
 from tkinter.ttk import *
+from tkinter import filedialog
 import time
 import datetime
 from cb_idcheck import cb_onfido
@@ -110,12 +111,12 @@ class idcheck:
         labelDOB.pack(side=LEFT)
 
 
-        #A entry box for each side of the ID document
+        #A entry box for each side of the ID documentt
         frameIDDoc1 = Frame(self.master)
         frameIDDoc1.pack()
         self.entryIDDoc1 = Entry(frameIDDoc1, width=25)
         self.entryIDDoc1.pack(side=LEFT)
-        self.entryIDDoc1.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+        self.entryIDDoc1.insert(0,"/Users/lawrence/Projects/ocean_idcheck/ticketFront.jpg")
         buttonIDDocFileOpen1 = Button(frameIDDoc1, text='ID document front', command=self.openIDDocFile1)
         buttonIDDocFileOpen1.pack(side=LEFT)
 
@@ -123,7 +124,7 @@ class idcheck:
         frameIDDoc2.pack()
         self.entryIDDoc2 = Entry(frameIDDoc2, width=25)
         self.entryIDDoc2.pack(side=LEFT)
-        self.entryIDDoc2.insert(0,"/Users/lawrence/Projects/ocean_idcheck/testPicture.png")
+        self.entryIDDoc2.insert(0,"/Users/lawrence/Projects/ocean_idcheck/ticketBack.jpg")
         buttonIDDocFileOpen2 = Button(frameIDDoc2, text='ID document back', command=self.openIDDocFile2)
         buttonIDDocFileOpen2.pack(side=LEFT)
 
@@ -256,7 +257,38 @@ class idcheck:
                 
     def fillKeys(self):
         self.cfg.check.tags=self.keys
-            
+
+    def openphoto(self, entry):
+        fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select file", filetypes = (("jpg files","*.jpg"),("png files","*.png"),("pdf files","*.pdf")))
+        entry.delete(0,END)
+        entry.insert(0,fileOpened)
+
+    def openIDDocFile1(self):
+        self.openphoto(self.entryIDDoc1)
+  
+    def openIDDocFile2(self):
+        self.openphoto(self.entryIDDoc2) 
+
+    def openPhotoFile(self):
+        self.openphoto(self.entryPhoto) 
+
+
+    def openKeyFile(self,entry=None):
+        if(entry==None):
+            entry=self.entryKeyFile
+        fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select key file")
+        entry.delete(0,END)
+        entry.insert(0,fileOpened)
+
+    def loadKeys(self):
+        with open(self.entryKeyFile.get(),'rt') as csvfile:
+            #                keyReader = csv.reader(csvfile, delimiter=' ')
+            myDialect = csv.excel
+            myDialect.delimiter=' '
+            dictReader = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['tweaked_address', 'untweaked_public_key'],dialect=myDialect)
+            for row in dictReader:
+                self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
+
     def submit(self):
         self.progress.start()
         self.status.set("Submitting...")
@@ -283,36 +315,7 @@ class idcheck:
 
 
  
-    def openIDDocFile1(self):
-        openphoto(self, self.entryIDDoc1)
-  
-    def openIDDocFile2(self):
-        openphoto(self, self.entryIDDoc2) 
 
-    def openPhotoFile(self):
-        openphoto(self, self.entryPhoto) 
-
-    def openphoto(self, entry):
-        fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select file", filetypes = (("jpg files","*.jpg"),("png files","*.png"),("pdf files","*.pdf")))
-        entry.delete(0,END)
-        entry.insert(0,fileOpened)
-
-    def openKeyFile(self,entry):
-        fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select key file", filetypes = (("all files","*.*")))
-        entry.delete(0,END)
-        entry.insert(0,fileOpened)
-
-    def openKeyFile(self):
-        openKeyFile(self, self.entryKey)
-            
-    def loadKeys(self):
-        with open(self.entryKeyFile.get(),'rt') as csvfile:
-            #                keyReader = csv.reader(csvfile, delimiter=' ')
-            myDialect = csv.excel
-            myDialect.delimiter=' '
-            dictReader = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['tweaked_address', 'untweaked_public_key'],dialect=myDialect)
-            for row in dictReader:
-                self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
 
 if __name__ == "__main__":
     from cb_idcheck import idcheck

@@ -21,8 +21,8 @@ class process_considerlist:
         parser.add_argument('--password', required=False, default=self.db.password,type=str, help="DB password")
         parser.add_argument('--port', required=False, default=self.db.port,type=str, help="DB port")
         parser.add_argument('--host', required=False, default=self.db.host,type=str, help="DB host")
-        parser.add_argument('--authsource', required=False, default=self.db.authSource,type=str, help="DB authSource")
-        parser.add_argument('--authmechanism', required=False, default=self.db.authMechanism,type=str, help="DB authMechanism")
+        parser.add_argument('--authsource', required=False, default=self.db.authsource,type=str, help="DB authSource")
+        parser.add_argument('--authmechanism', required=False, default=self.db.authmechanism,type=str, help="DB authMechanism")
         parser.add_argument('--idcheck_token', required=False, type=str, default=self.id_api.token, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN")
         args=parser.parse_args(argv)
         self.db.username=args.username

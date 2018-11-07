@@ -9,11 +9,18 @@ import itertools
 import time
 
 class watch:
-    def __init__(self, dbuser=os.environ['MONGODB_USER'], dbpassword=os.environ['MONGODB_PASS']):
+    def __init__(self, dbuser=os.environ.get('MONGODB_USER',None), dbpassword=os.environ.get('MONGODB_PASS',None),
+                 port=os.environ.get('MONGODB_PORT', None), host='mongodbhost', 
+                 authsource=os.environ.get('MONGODB_USER', None),
+                 authmechanism='SCRAM-SHA-256'):
         self.rec = record()        
         self.conf = {} #Ocean daemon config
         self.dbuser=dbuser #Database login details
         self.dbpassword=dbpassword
+        self.authsource=authsource
+        self.authmechanism=authmechanism
+        self.port=port
+        self.host=host
         self.count=0
 
     def set_rpcuser(self, val):
@@ -34,6 +41,10 @@ class watch:
         parser.add_argument('--rpcpassword', required=True, type=str, help="RPC password for client")
         parser.add_argument('--dbuser', required=False, default=self.dbuser,type=str, help="Whitelist database user name")
         parser.add_argument('--dbpassword', required=False, default=self.dbpassword, help="Whitelist database password")
+        parser.add_argument('--authsource', required=False, default=self.authsource,type=str, help="db authsource")
+        parser.add_argument('--authmechanism', required=False, default=self.authmechanism,type=str, help="db authmechanism")
+        parser.add_argument('--host', required=False, default=self.host,type=str, help="db host")
+        parser.add_argument('--port', required=False, default=self.port,type=str, help="db port")
         args = parser.parse_args(argv)
         self.set_rpcuser(args.rpcuser)
         self.set_rpcpassword(args.rpcpassword)
@@ -41,6 +52,10 @@ class watch:
         self.set_rpcconnect(args.rpcconnect)
         self.dbuser=args.dbuser
         self.dbpassword=args.dbpassword
+        self.authsource=args.authsource
+        self.authmechanism=args.authmechanism
+        self.host=args.host
+        self.port=args.port
 
     def add_keys(self, addresses, keys):
         for address,key in zip(addresses,keys):
@@ -67,7 +82,8 @@ class watch:
 
     def run(self):
         #Start database
-        self.db = database(username=self.dbuser, password=self.dbpassword)
+        self.db = database(username=self.dbuser, password=self.dbpassword, authsource=self.authsource, authmechanism=self.authmechanism, port=self.port,
+                           host=self.host)
         self.db.connect()
 
         #Connect to node

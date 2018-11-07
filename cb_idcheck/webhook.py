@@ -24,11 +24,17 @@ class webhook:
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
                  ngrok=False, 
-                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
+                 host='localhost',
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
+                 dbusername=os.environ.get('MONGODB_USER',None), 
+                 dbpassword=os.environ.get('MONGODB_PASS',None), 
+                 dbport=os.environ.get('MONGODB_PORT', None), dbhost='mongodbhost', 
+                 dbauthsource=os.environ.get('MONGODB_USER', None),
+                 dbauthmechanism='SCRAM-SHA-256'):
+
         self.app = Flask(__name__)
         self.cust_record=record.record()
         self.id_api=cb_onfido.cb_onfido(idcheck_token)
-        self.db=database.database()
         self.route='/'
         self.url=url
         self.token=token
@@ -36,7 +42,14 @@ class webhook:
         self.ngrok=ngrok
         self.ngrok_process=None
         self.port=port
+        self.host=host
         self.idcheck=idcheck()
+        self.dbusername=dbusername
+        self.dbpassword=dbpassword
+        self.dbport=port
+        self.dbhost=host
+        self.dbauthsource=dbauthsource
+        self.dbauthmechanism=dbauthmechanism
         
 
 
@@ -45,9 +58,18 @@ class webhook:
         parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
         parser.add_argument('--url', required=False, type=str, help="Webhook url. Default=$IDCHECK_WEBHOOK_URL", default=self.url)
         parser.add_argument('--port', required=False, type=str, help="Webhook port. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
+        parser.add_argument('--host', required=False, type=str, help="Webhook host. Default='localhost'", default=self.host)
         parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG, fallback=/usr/local/var/log/cb_idcheck.log", default=self.log)
         parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
+        parser.add_argument('--dbusername', required=False, default=self.dbusername,type=str, help="Mongdo username")
+        parser.add_argument('--dbpassword', required=False, default=self.dbpassword,type=str, help="Mongodb password")
+        parser.add_argument('--dbport', required=False, default=self.dbport,type=str, help="Mongodb port")
+        parser.add_argument('--dbhost', required=False, default=self.dbhost,type=str, help="Mongodb host")
+        parser.add_argument('--dbauthsource', required=False, default=self.dbauthsource,type=str, help="Mongodb authsource")
+        parser.add_argument('--dbauthmechanism', required=False, default=self.dbauthmechanism,type=str, help="Mongodb authmechanism")
+
+
         args = parser.parse_args(argv)
         self.token = args.token
         self.url=args.url
@@ -55,7 +77,13 @@ class webhook:
         self.log=args.log
         self.id_api.set_token(args.idcheck_token)
         self.ngrok=args.ngrok
-
+        self.host=args.host
+        self.dbusername=args.dbusername
+        self.dbpassword=args.dbpassword
+        self.dbport=args.dbport
+        self.dbhost=args.dbhost
+        self.dbauthsource=args.dbauthsource
+        self.dbauthmechanism=args.dbauthmechanism
 
     def authenticate(self, request):
         key = urllib.parse.quote_plus(self.token).encode()
@@ -158,6 +186,9 @@ class webhook:
         #Configure logging
         logging.basicConfig(filename=self.log, level=logging.WARNING)
         #Connect to the whitelist database server
+        self.db=database.database(username=self.dbusername, password=self.dbpassword, port=self.dbport, authsource=self.dbauthsource, 
+                                  authmechanism=self.dbauthmechanism)
+
         self.db.connect()
 
         self.route_webhook()

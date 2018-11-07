@@ -16,16 +16,17 @@ class database:
 
     def __init__(self,username=os.environ.get('MONGODB_USER',None), 
                  password=os.environ.get('MONGODB_PASS',None), 
-                 port=os.environ.get('MONGODB_PORT', None), host='mongodbhost', 
-                 authSource=os.environ.get('MONGODB_USER', None),
-                 authMechanism='SCRAM-SHA-256'):
+                 port=os.environ.get('MONGODB_PORT', None), 
+                 host='mongodbhost', 
+                 authsource=os.environ.get('MONGODB_USER', None),
+                 authmechanism='SCRAM-SHA-256'):
         
-        self.username=self.quote(username)
-        self.password=self.quote(password)
+        self.username=username
+        self.password=password
         self.port=port
         self.host=host
-        self.authSource=self.quote(authSource)
-        self.authMechanism=self.quote(authMechanism)
+        self.authsource=authsource
+        self.authmechanism=authmechanism
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -33,26 +34,26 @@ class database:
         parser.add_argument('--password', required=False, default=self.password,type=str, help="Password")
         parser.add_argument('--port', required=False, default=self.port,type=str, help="Port")
         parser.add_argument('--host', required=False, default=self.host,type=str, help="Host")
-        parser.add_argument('--authsource', required=False, default=self.username,type=str, help="authSource")
-        parser.add_argument('--authmechanism', required=False, default=self.authMechanism,type=str, help="authMechanism")
+        parser.add_argument('--authsource', required=False, default=self.username,type=str, help="authsource")
+        parser.add_argument('--authmechanism', required=False, default=self.authmechanism,type=str, help="authmechanism")
         args = parser.parse_args(argv)
-        self.username=self.quote(args.username)
-        self.password=self.quote(args.password)
+        self.username=args.username
+        self.password=args.password
         self.port=args.port
         self.host=args.host
-        self.authSource=self.quote(args.authsource)
-        self.authMechanism=self.quote(args.authmechanism)
+        self.authsource=args.authsource
+        self.authmechanism=args.authmechanism
 
 
 
     def connect(self):
         self.client = pymongo.MongoClient(self.host,
-                     port=int(self.port),
+                      port=int(self.port),
                       username=self.username,
                       password=self.password,
-                      authSource=self.authSource,
-                      authMechanism=self.authMechanism)
-        self.db = self.client[self.authSource]
+                      authsource=self.authsource,
+                      authmechanism=self.authmechanism)
+        self.db = self.client[self.authsource]
         self.whitelist=self.db.whitelist
         self.considerlist=self.db.considerlist
 
