@@ -46,8 +46,8 @@ class webhook:
         self.idcheck=idcheck()
         self.dbusername=dbusername
         self.dbpassword=dbpassword
-        self.dbport=port
-        self.dbhost=host
+        self.dbport=dbport
+        self.dbhost=dbhost
         self.dbauthsource=dbauthsource
         self.dbauthmechanism=dbauthmechanism
         
@@ -187,7 +187,7 @@ class webhook:
         logging.basicConfig(filename=self.log, level=logging.WARNING)
         #Connect to the whitelist database server
         self.db=database.database(username=self.dbusername, password=self.dbpassword, port=self.dbport, authsource=self.dbauthsource, 
-                                  authmechanism=self.dbauthmechanism)
+                                  authmechanism=self.dbauthmechanism, host=self.dbhost)
 
         self.db.connect()
 
