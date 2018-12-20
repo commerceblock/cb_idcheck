@@ -1,5 +1,5 @@
 #Fetches the addresses and keys from the whitelist database and prints them in columns <address> <key>
-from cb_idcheck import database
+from cb_idcheck.database import database
 
 db = database()
 db.connect()
