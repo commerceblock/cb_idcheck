@@ -17,7 +17,7 @@ class database:
     def __init__(self,username=os.environ.get('MONGODB_USER',None), 
                  password=os.environ.get('MONGODB_PASS',None), 
                  port=os.environ.get('MONGODB_PORT', None), 
-                 host='mongodbhost', 
+                 host='wldbdbhost', 
                  authsource=os.environ.get('MONGODB_USER', None),
                  authmechanism='SCRAM-SHA-256'):
         
