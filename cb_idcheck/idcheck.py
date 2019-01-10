@@ -31,6 +31,7 @@ class idcheck:
         parser.add_argument('--idDocSide1', required=False, type=str, help="Side1 of ID document as a path to a file containing a jpg or png formatted image. Default=None", default=None)
         parser.add_argument('--idDocSide2', required=False, type=str, help="Side2 of ID document, if document is 2-sided as a path to a file containing a jpg or png formatted image. Default=None", default=None)
         parser.add_argument('--photo', required=False, type=str, help="Live photo of applicant as a path to a file containing a jpg or png formatted image. Default=None", default=None)
+
         args = parser.parse_args(argv)
         self.token = args.token
         self.gui = args.gui
@@ -38,6 +39,8 @@ class idcheck:
         self.setIDDocument(args.idDocType, args.idDocSide1, args.idDocSide2)
         self.setPhoto(args.photo)
         
+
+
     def __init__(self, token=None, master=None):
         self.token=token
         self.master=master
@@ -51,6 +54,18 @@ class idcheck:
         self.applicant.country='GBR' #This is the jurisdiction where the ID check takes place, not the applicant's home country.
         self.address=self.id_api.onfido.Address()
         self.cfg=idcheck_config(self.id_api.onfido.CheckCreationRequest(async=True))
+
+        #1 is both sides are required. 0 otherwise.
+        self.docTypeSides={"passport": 0, 
+                       "national_identity_card":1, 
+                       "driving_licence":1, 
+                       "uk_biometric_residence_permit":1, 
+                       "tax_id":0, 
+                       "voter_id":1
+                       }
+        self.docTypes=list(self.docTypeSides.keys())
+        
+
 
     def run(self):
         frameStatus = Frame(self.master)
@@ -151,16 +166,6 @@ class idcheck:
         self.listboxIDDocType = Listbox(frameIDDocType, exportselection=0)
         self.listboxIDDocType.delete(0,END)
         size=0
-        #1 is both sides are required. 0 otherwise.
-        self.docTypeSides={"passport": 0, 
-                       "national_identity_card":1, 
-                       "driving_licence":1, 
-                       "uk_biometric_residence_permit":1, 
-                       "tax_id":0, 
-                       "voter_id":1
-                       }
-        self.docTypes=list(self.docTypeSides.keys())
-        
         for item in self.docTypes:
             self.listboxIDDocType.insert(END,item)
             size=size+1
@@ -242,52 +247,56 @@ class idcheck:
                        
     #Fill applicant data from GUI
     def fillApplicant(self):
-        setApplicant(first_name = self.entryFirstName.get(), 
+        self.setApplicant(first_name = self.entryFirstName.get(), 
                        last_name = self.entryLastName.get(), 
                        dob_year=self.entryYear.get(),
                        dob_month=self.entryMonth.get(),
                        dob_day=self.entryDay.get())
-
-    def fillAddress(self):
-        self.address.building_number=self.entryBuildingNo.get()
-        self.address.street=self.entryStreet.get()
-        self.address.town=self.entryTown.get()
-        self.address.postcode=self.entryPostcode.get()
-        self.address.country=self.entryCountry.get()
-        self.applicant.addresses=[self.address]
+#Not using addresses
+#    def fillAddress(self):
+#        self.address.building_number=self.entryBuildingNo.get()
+#        self.address.street=self.entryStreet.get()
+#        self.address.town=self.entryTown.get()
+#        self.address.postcode=self.entryPostcode.get()
+#        self.address.country=self.entryCountry.get()
+#        self.applicant.addresses=[self.address]
 
     def setIDDocument(self, idDocType="passport", idDocSide1File="", idDocSide2File=""):
         self.idDocType=idDocType
-        self.idDoc2Sided=False
-        self.idSodSide1File=idDocSide1File
+        self.idDoc2Sided=(self.docTypeSides[self.idDocType] == 1),
+        self.idDocSide1File=idDocSide1File
         self.idDocSide2File=idDocSide2File
 
     def fillIDDocument(self):
-        setIDDocument(idDocType=self.docTypes[self.listboxIDDocType.curselection()[0]],
-                        idDoc2Sided=(self.docTypeSides[self.idDocType] == 1),
-                        idDocSide1File=self.entryIDDoc1.get(),
-                        idDocSide2File=self.entryIDDoc2.get())           
+        self.setIDDocument(idDocType=self.docTypes[self.listboxIDDocType.curselection()[0]],
+                           idDocSide1File=self.entryIDDoc1.get(),
+                           idDocSide2File=self.entryIDDoc2.get())           
             
     def uploadIDDocument(self):
-        self.status.set("Uploading id document...")
+        self.printStatus("Uploading id document...")
         api_response = []
         api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="front", file=self.idDocSide1File))
         if (self.idDoc2Sided==True):
             api_response.append(self.api_instance.upload_document(self.applicant.id, self.idDocType, side="back", file=self.idDocSide2File))
-        self.status.set("...id document upload complete.")
+        self.printStatus("...id document upload complete.")
         return api_response
 
     def setPhoto(self, photoFile):
         self.photoFile=photoFile
 
     def fillPhoto(self):
-        setPhoto(photoFile=self.entryPhoto.get())
+        self.setPhoto(photoFile=self.entryPhoto.get())
 
     def uploadPhoto(self):
-        self.status.set("Uploading live photo...")
+        self.printStatus("Uploading live photo...")
         api_response = self.api_instance.upload_live_photo(applicant_id=self.applicant.id, file=self.photoFile, advanced_validation=True)
-        self.status.set("...live photo upload complete.")
+        self.printStatus("...live photo upload complete.")
         return api_response
+
+    def printStatus(self, msg):
+        if self.gui is True:
+            self.status.set(msg)
+        print(msg)
 
     def openphoto(self, entry):
         fileOpened = filedialog.askopenfilename(initialdir = "/", title = "Select file", filetypes = (("jpg files","*.jpg"),("png files","*.png"),("pdf files","*.pdf")))
@@ -311,7 +320,7 @@ class idcheck:
         entry.insert(0,fileOpened)
 
     def fillKeys(self):
-        importKeys(keyFile=self.entryKeyFile.get())
+        self.importKeys(keyFile=self.entryKeyFile.get())
 
     def importKeys(self, keyFile):
         with open(keyFile,'rt') as csvfile:
@@ -323,34 +332,35 @@ class idcheck:
                 self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
             self.cfg.check.tags=self.keys
 
-    def submitFromGUI():
+    def submitFromGUI(self):
         self.fillDataFromGUI()
         self.submit()
 
-    def fillDataFromGUI():
+    def fillDataFromGUI(self):
         self.fillApplicant()
-        self.fillAddress()
+#        self.fillAddress()
         self.fillIDDocument()
         self.fillPhoto()
         self.fillKeys()
 
     def submit(self):
-        self.progress.start()
-        self.status.set("Submitting...")
+        if self.gui is True:
+            self.progress.start()
+        self.printStatus("Submitting...")
         try:
             api_response = self.api_instance.create_applicant(data=self.applicant)
             self.applicant.id=api_response.id
             api_response=self.uploadIDDocument()
             api_response=self.uploadPhoto()
             api_response=self.api_instance.create_check(self.applicant.id, data=self.cfg.check)
-            self.status.set("Submission complete.")
-            print("Submission complete.")
+            self.printStatus("Submission complete.")
             time.sleep(1)
             self.master.quit()
         except cb_onfido.ApiException as e:
             pprint(e.body)
-            self.status.set("Error: " + e.body)
-        self.progress.stop()
+            self.printStatus("Error: " + e.body)
+        if self.gui is True:
+            self.progress.stop()
 
     def __str__(self):
         print ("Applicant:")
@@ -371,8 +381,8 @@ if __name__ == "__main__":
         idc.run()
         root.mainloop()            
     else:
-        if idc.interactive:
-            print(idc)
+        idc.submit()
+
 
 
 
