@@ -19,11 +19,22 @@ Main modules:
 
 ### idcheck
 
-A GUI for sumbitting customer ID details to the idcheck vendor (e.g. Onfido).
+For sumbitting customer ID details to the idcheck vendor (e.g. Onfido). This can be run either as a command or as a GUI. To run the GUI:
 
 Run:
-	`python idcheck.py`
+	`python3 idcheck.py --gui`
 
+An ID check can also be requested in a single command. See help for details:
+
+	`python3 idcheck.py --help`
+
+Finally, the class "idcheck" can be imported into another python script:
+
+        `from cb_idcheck.idcheck import idcheck`
+        `idc=idcheck()`
+	`idc.first_name="Tom"`
+	`...`
+	`idc.submit()`
 
 ### database
 

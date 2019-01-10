@@ -43,6 +43,7 @@ class idcheck:
 
     def __init__(self, token=None, master=None):
         self.token=token
+        self.gui=False
         self.master=master
         self.title="CommerceBlock ID check"
         self.keys=[]
