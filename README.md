@@ -68,13 +68,13 @@ If the argument --ngrok True is passed then the client will:
 
 Example 
 
-	$ python webhook.py --ngrok True
+	$ python3 webhook.py --ngrok True
 
 #### Monitor an existing webhook
 
 To begin monitoring an existing webhook:
 	      
-	$ python webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False
+	$ python3 webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False
 
 	Defaults:
 	- token: $IDCHECK_WEBHOOK_TOKEN - the webhook authentication token supplied by the idcheck vendor when registering the webhook.
@@ -88,7 +88,7 @@ A client to update a node whitelist with additions and updates to the the mongdb
 
 To start the client:
    
-	$ python watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS
+	$ python3 watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS
 
 	Defaults:
 	- rpcconnect: $HOST - the ip address of the whitelist node. 
@@ -105,7 +105,7 @@ This interactive script can be used to review the entries in the consider list a
 
 Example
 
-	$ python process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN	
+	$ python3 process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN	
 
 
 	Defaults:
