@@ -323,6 +323,8 @@ class idcheck:
         self.importKeys(keyFile=self.entryKeyFile.get())
 
     def importKeys(self, keyFile):
+        if keyFile is None:
+            return
         with open(keyFile,'rt') as csvfile:
             #                keyReader = csv.reader(csvfile, delimiter=' ')
             myDialect = csv.excel
