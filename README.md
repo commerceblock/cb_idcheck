@@ -3,7 +3,7 @@
 Tools for managing a whitelisting database for a Ocean (https://github.com/commerceblock/ocean) sidechain.
 
 ## Installation
-   `python3 setup.py build && python3 setup.py install`
+   $ python3 setup.py build && python3 setup.py install
 
 
 ## Overview
@@ -22,20 +22,20 @@ Main modules:
 For sumbitting customer ID details to the idcheck vendor (e.g. Onfido). This can be run either as a command or as a GUI. To run the GUI:
 
 Run:
-
-`python3 idcheck.py --gui`
+	
+	$ python3 idcheck.py --gui
 
 An ID check can also be requested in a single command. See help for details:
 
-`python3 idcheck.py --help`
+   $ python3 idcheck.py --help
 
 Finally, the class "idcheck" can be imported into another python script:
 
-`from cb_idcheck.idcheck import idcheck`
-`idc=idcheck()`
-`idc.first_name="Tom"`
-`...`
-`idc.submit()`
+	 >>> from cb_idcheck.idcheck import idcheck
+	 >>> idc=idcheck()
+	 >>> idc.first_name="Tom"
+	 >>> ...
+	 >>> idc.submit()
 
 ### database
 
@@ -43,15 +43,15 @@ Interface to the whitelisting database.
 
 To run the test:
 
-`python3 -m database --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM`	
+   $ python3 -m database --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM
 	
-Defaults:
--username: $MONGODB_USER
--password: $MONGODB_PASS
--port: $MONGODB_PORT
--host: mongodbhost (defined in /etc/hosts)
--authsource: $MONGODB_USER
--authmechanism: 'SCRAM-SHA-256'
+	Defaults:
+	-username: $MONGODB_USER
+	-password: $MONGODB_PASS
+	-port: $MONGODB_PORT
+	-host: mongodbhost (defined in /etc/hosts)
+	-authsource: $MONGODB_USER
+	-authmechanism: 'SCRAM-SHA-256'
 
 Example use: see database.test() in database.py 
 
@@ -68,13 +68,13 @@ If the argument --ngrok True is passed then the client will:
 
 Example 
 
-	`python webhook.py --ngrok True`
+	$ python webhook.py --ngrok True
 
 #### Monitor an existing webhook
 
 To begin monitoring an existing webhook:
 	      
-	`python webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False`
+	$ python webhook.py --token $IDCHECK_WEBHOOK_TOKEN --public_url $IDCHECK_WEBHOOK_URL --port $IDCHECK_WEBHOOK_PORT --log $IDCHECK_LOG --public_url $IDCHECK_WEBHOOK_URL --ngrok False
 
 	Defaults:
 	- token: $IDCHECK_WEBHOOK_TOKEN - the webhook authentication token supplied by the idcheck vendor when registering the webhook.
@@ -88,7 +88,7 @@ A client to update a node whitelist with additions and updates to the the mongdb
 
 To start the client:
    
-	`python watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS`
+	$ python watch.py --rpcconnect $HOST --rpcport $PORT --rpcuser $USER --rpcpassword $PASS --dbuser $MONGODB_USER --dbpassword $MONGODB_PASS
 
 	Defaults:
 	- rpcconnect: $HOST - the ip address of the whitelist node. 
@@ -105,7 +105,7 @@ This interactive script can be used to review the entries in the consider list a
 
 Example
 
-	`python process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN`	
+	$ python process_considerlist.py --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM --idcheck_token $IDCHECK_API_TOKEN	
 
 
 	Defaults:

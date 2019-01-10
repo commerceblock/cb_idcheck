@@ -38,12 +38,11 @@ class idcheck:
         self.setApplicant(args.first_name, args.last_name, args.dob_year, args.dob_month, args.dob_day)
         self.setIDDocument(args.idDocType, args.idDocSide1, args.idDocSide2)
         self.setPhoto(args.photo)
-        
+        self.importKeys(args.keys)
 
 
     def __init__(self, token=None, master=None):
         self.token=token
-        self.gui=False
         self.master=master
         self.title="CommerceBlock ID check"
         self.keys=[]
