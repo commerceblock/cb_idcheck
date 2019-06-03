@@ -2,7 +2,6 @@ from flask import Flask, request, abort
 import json
 from cb_idcheck import record
 from cb_idcheck import cb_onfido
-from cb_idcheck import database
 from pprint import pprint
 import hmac
 import hashlib
@@ -25,13 +24,7 @@ class webhook:
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
                  ngrok=False, 
                  host='localhost',
-                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
-                 dbusername=os.environ.get('MONGODB_USER',None), 
-                 dbpassword=os.environ.get('MONGODB_PASS',None), 
-                 dbport=os.environ.get('MONGODB_PORT', None), dbhost='mongodbhost', 
-                 dbauthsource=os.environ.get('MONGODB_USER', None),
-                 dbauthmechanism='SCRAM-SHA-256'):
-
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
         self.app = Flask(__name__)
         self.cust_record=record.record()
         self.id_api=cb_onfido.cb_onfido(idcheck_token)
@@ -44,14 +37,7 @@ class webhook:
         self.port=port
         self.host=host
         self.idcheck=idcheck()
-        self.dbusername=dbusername
-        self.dbpassword=dbpassword
-        self.dbport=dbport
-        self.dbhost=dbhost
-        self.dbauthsource=dbauthsource
-        self.dbauthmechanism=dbauthmechanism
-        
-
+   
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -62,14 +48,7 @@ class webhook:
         parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG, fallback=/usr/local/var/log/cb_idcheck.log", default=self.log)
         parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
-        parser.add_argument('--dbusername', required=False, default=self.dbusername,type=str, help="Mongdo username")
-        parser.add_argument('--dbpassword', required=False, default=self.dbpassword,type=str, help="Mongodb password")
-        parser.add_argument('--dbport', required=False, default=self.dbport,type=str, help="Mongodb port")
-        parser.add_argument('--dbhost', required=False, default=self.dbhost,type=str, help="Mongodb host")
-        parser.add_argument('--dbauthsource', required=False, default=self.dbauthsource,type=str, help="Mongodb authsource")
-        parser.add_argument('--dbauthmechanism', required=False, default=self.dbauthmechanism,type=str, help="Mongodb authmechanism")
-
-
+   
         args = parser.parse_args(argv)
         self.token = args.token
         self.url=args.url
@@ -78,13 +57,7 @@ class webhook:
         self.id_api.set_token(args.idcheck_token)
         self.ngrok=args.ngrok
         self.host=args.host
-        self.dbusername=args.dbusername
-        self.dbpassword=args.dbpassword
-        self.dbport=args.dbport
-        self.dbhost=args.dbhost
-        self.dbauthsource=args.dbauthsource
-        self.dbauthmechanism=args.dbauthmechanism
-
+   
     def authenticate(self, request):
         key = urllib.parse.quote_plus(self.token).encode()
         message = request.data
@@ -160,13 +133,14 @@ class webhook:
                     applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
                     self.cust_record.import_from_applicant_check(applicant_check)
                     if(applicant_check[1].result=="clear"):
-                        self.db.addToWhitelist(self.cust_record)
+                        self.cust_record.get()
+                        self.cust_record.to_file("whitelisted")
                         print('ID Check result: clear. Added addresses to whitelist.')
                         return 'Added addresses to whitelist.', 200
                 #The check returned 'consider' status so human intervention is required.
                     elif(applicant_check[1].result=="consider"):
+                        self.cust_record.to_file("consider")
                         print('ID Check result: consider. Addding check to considerlist.')
-                        self.db.addToConsiderlist(applicant_check)
                         return 'Added addresses to considerlist.', 200
                 #The check returned a failure and will be logged.
                     else:
@@ -185,11 +159,6 @@ class webhook:
 
         #Configure logging
         logging.basicConfig(filename=self.log, level=logging.WARNING)
-        #Connect to the whitelist database server
-        self.db=database.database(username=self.dbusername, password=self.dbpassword, port=self.dbport, authsource=self.dbauthsource, 
-                                  authmechanism=self.dbauthmechanism, host=self.dbhost)
-
-        self.db.connect()
 
         self.route_webhook()
 

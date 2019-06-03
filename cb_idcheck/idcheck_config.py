@@ -13,9 +13,9 @@ class idcheck_config:
         self.check.reports.append(onf.onfido.Report())
         self.check.reports[-1].name='facial_similarity'
         self.check.reports[-1].variant='standard'
-        self.check.reports.append(onf.onfido.Report())
-        self.check.reports[-1].name='identity'
-        self.check.reports[-1].variant='kyc'
+#        self.check.reports.append(onf.onfido.Report())
+#        self.check.reports[-1].name='identity'
+#        self.check.reports[-1].variant='kyc'
         self.check.reports.append(onf.onfido.Report())
         self.check.reports[-1].name='watchlist'
         self.check.reports[-1].variant='kyc'
