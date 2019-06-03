@@ -1,3 +1,7 @@
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 #Class inhertied from onfido class for connection to onfido and id check submission/retrieval
 import onfido
 import os

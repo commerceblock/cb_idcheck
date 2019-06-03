@@ -1,3 +1,6 @@
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+
 #A customer record class for whitelisting.
 #The _id is a unique customer identifier.
 #Keys are the untweaked public keys and addresses are the contract tweaked addresses.

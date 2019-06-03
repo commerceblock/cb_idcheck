@@ -1,3 +1,6 @@
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+
 from cb_idcheck.database import database
 from cb_idcheck.record import record
 from cb_idcheck.connectivity import getelementsd 
