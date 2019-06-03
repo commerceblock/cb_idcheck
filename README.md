@@ -20,7 +20,7 @@ Tools for managing a whitelisting database for a Ocean (https://github.com/comme
 
 ### Basic usage
 
-- Optional: run webhook.py. In a production environment, a permanent webhook should be established. For testing purposes, a temporary webhook can be set up using the --ngrok=true option. The KYC provider API configuration must be provided - run with the --help argument for more details.
+- Optional: run webhook.py. For testing purposes, a temporary webhook can be set up using the --ngrok=true option. The KYC provider API configuration must be provided - run with the --help argument for more details.
 
 - Submit user details to the KYC provider using idcheck.py. This be done using the test GUI or by providing the required data as command line arguments.
 
