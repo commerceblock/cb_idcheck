@@ -7,14 +7,26 @@ Tools for managing a whitelisting database for a Ocean (https://github.com/comme
     $ python3 setup.py build && python3 setup.py install
 
 
-## Overview
+## Overview 
 
-Main modules:
+### Main modules
 
 - idcheck - a user details submission GUI for Onfido ID checks.
-- database - mongodb whitelisting database client.
 - webhook - webhook monitoring daemon for changes returned from Onfido following submission of an ID check.
 - watch - daemon for updating the local node whitelist in response to changes to a mongodb database.
+- process_considerlist - a script to assist with processing uses that have not passes all KYC checks.
+- database - mongodb whitelisting database client (derpricated).
+
+
+### Basic usage
+
+- Optional: run webhook.py. In a production environment, a permanent webhook should be established. For testing purposes, a temporary webhook can be set up using the --ngrok=true option. The KYC provider API configuration must be provided - run with the --help argument for more details.
+
+- Submit user details to the KYC provider using idcheck.py. This be done using the test GUI or by providing the required data as command line arguments.
+
+On receipt of the check results, webhook.py will write a ID tagged and timestamped KYC file into either the 'whitelisted' or 'consider' directory depending on the outcome of the checks. 
+
+Additional scripts are supplied to automaticically whitelist addresses on receipt of the whitelisted user data (KYC file), and for processing users that have not passed all checks: these are watch.py and process_considerlist.py.
 
 ## Modules
 
@@ -45,30 +57,10 @@ Finally, the class "idcheck" can be imported into another python script:
 
 
 
-### database
-
-Interface to the whitelisting database.
-
-To run the test:
-
-
-    $ python3 -m database --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS \  
-      --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM  
-	
-Defaults:  
--username: $MONGODB_USER  
--password: $MONGODB_PASS  
--port: $MONGODB_PORT  
--host: mongodbhost (defined in /etc/hosts)  
--authsource: $MONGODB_USER  
--authmechanism: 'SCRAM-SHA-256'  
-
-
-Example use: see database.test() in database.py 
 
 ### webhook
 
-A client that monitors a webhook for updates from the id check vendor (e.g. Onfido) and publishes the whitelisted keys to a mongdb database.
+A client that monitors a webhook for updates from the id check vendor (e.g. Onfido) and saves the whitelist KYC files to a directory for subsequent user onboarding. The default directories are 'whitelisted' for whitelisted KYC files belonging to users that passed all checks, and 'consider' for KYC files that belong to users who fell short of passing all checks.
 
 #### Open and register a new webhook
 
@@ -136,3 +128,24 @@ Defaults:
 - authsource: $MONGODB_USER  
 - authmechanism: 'SCRAM-SHA-256'  
 - idcheck_token: $IDCHECK_API_TOKEN  
+
+### database
+
+Interface to the whitelisting database.
+
+To run the test:
+
+
+    $ python3 -m database --username $USERNAME --password $PASSWORD --port $PORT --host $HOSTS \  
+      --authsource $AUTHSOURCE --authmechanism $AUTHMECHANISM  
+	
+Defaults:  
+-username: $MONGODB_USER  
+-password: $MONGODB_PASS  
+-port: $MONGODB_PORT  
+-host: mongodbhost (defined in /etc/hosts)  
+-authsource: $MONGODB_USER  
+-authmechanism: 'SCRAM-SHA-256'  
+
+
+Example use: see database.test() in database.py 
