@@ -1,3 +1,6 @@
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+
 #!/usr/bin/env python3
 import os
 import random

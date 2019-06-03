@@ -1,3 +1,6 @@
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+
 import argparse
 from cb_idcheck.cb_onfido import cb_onfido
 
@@ -13,9 +16,9 @@ class idcheck_config:
         self.check.reports.append(onf.onfido.Report())
         self.check.reports[-1].name='facial_similarity'
         self.check.reports[-1].variant='standard'
-        self.check.reports.append(onf.onfido.Report())
-        self.check.reports[-1].name='identity'
-        self.check.reports[-1].variant='kyc'
+#        self.check.reports.append(onf.onfido.Report())
+#        self.check.reports[-1].name='identity'
+#        self.check.reports[-1].variant='kyc'
         self.check.reports.append(onf.onfido.Report())
         self.check.reports[-1].name='watchlist'
         self.check.reports[-1].variant='kyc'

@@ -1,3 +1,6 @@
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+
 from __future__ import print_function
 import sys
 import tkinter
@@ -15,6 +18,7 @@ import argparse
 import os
 from cb_idcheck.idcheck_config import idcheck_config
 from pprint import pprint
+import numpy as np
 
 class idcheck:
     def parse_args(self, argv=None):
@@ -39,8 +43,7 @@ class idcheck:
         self.setIDDocument(args.idDocType, args.idDocSide1, args.idDocSide2)
         self.setPhoto(args.photo)
         self.importKeys(args.keys)
-
-
+        
     def __init__(self, token=None, master=None):
         self.token=token
         self.master=master
@@ -53,7 +56,7 @@ class idcheck:
         self.applicant=self.id_api.onfido.Applicant()
         self.applicant.country='GBR' #This is the jurisdiction where the ID check takes place, not the applicant's home country.
         self.address=self.id_api.onfido.Address()
-        self.cfg=idcheck_config(self.id_api.onfido.CheckCreationRequest(async=True))
+        self.cfg=idcheck_config(self.id_api.onfido.Check())
 
         #1 is both sides are required. 0 otherwise.
         self.docTypeSides={"passport": 0, 
@@ -186,15 +189,15 @@ class idcheck:
         
 #       labelAddress = Label(self.master, text='Address')
 #       labelAddress.pack()
-#        frameBuildingNo = Frame(self.master)
-#        frameBuildingNo.pack()
-#        self.entryBuildingNo = Entry(frameBuildingNo)
-#        self.entryBuildingNo.pack(side=LEFT)
-#        self.entryBuildingNo.insert(0,"10")
-#        labelBuildingNo = Label(frameBuildingNo, text='Building number')
-#        labelBuildingNo.packside=LEFT)
-#        frameStreet = Frame(self.master)
-#        frameStreet.pack()
+#       frameBuildingNo = Frame(self.master)
+#       frameBuildingNo.pack()
+#       self.entryBuildingNo = Entry(frameBuildingNo)
+#       self.entryBuildingNo.pack(side=LEFT)
+#       self.entryBuildingNo.insert(0,"10")
+#       labelBuildingNo = Label(frameBuildingNo, text='Building number')
+#       labelBuildingNo.packside=LEFT)
+#       frameStreet = Frame(self.master)
+#       frameStreet.pack()
 #        self.entryStreet = Entry(frameStreet)
 #        self.entryStreet.pack(side=LEFT)
 #        self.entryStreet.insert(0,"Main Street")
@@ -228,7 +231,7 @@ class idcheck:
         frameKeyFile.pack()
         self.entryKeyFile = Entry(frameKeyFile, width=25)
         self.entryKeyFile.pack(side=LEFT)
-        self.entryKeyFile.insert(0,"/Users/lawrence/Projects/ocean-demo/keys.client")
+        self.entryKeyFile.insert(0,"/Users/lawrence/Projects/ocean-demo/kycfile.dat")
         buttonKeyFileOpen = Button(frameKeyFile, text='Key file', command=self.openKeyFile)
         buttonKeyFileOpen.pack(side=LEFT)
 
@@ -326,13 +329,36 @@ class idcheck:
         if keyFile is None:
             return
         with open(keyFile,'rt') as csvfile:
-            #                keyReader = csv.reader(csvfile, delimiter=' ')
             myDialect = csv.excel
             myDialect.delimiter=' '
-            dictReader = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['tweaked_address', 'untweaked_public_key'],dialect=myDialect)
-            for row in dictReader:
-                self.keys = self.keys+[row['tweaked_address'], row['untweaked_public_key']]
-            self.cfg.check.tags=self.keys
+            dictReader1 = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['onboard_pub_key', 'user_onboard_pub_key', 'nbytes'],dialect=myDialect)
+            for row in dictReader1:
+                if(row['nbytes']):
+                    self.kyc_header=row
+                   # pprint(self.kyc_header)
+                    break
+
+
+        with open(keyFile,'rt') as csvfile:
+            dictReader2 = csv.DictReader(filter(lambda row: row[0]!='#', csvfile), fieldnames=['addrdata_encrypted'],dialect=myDialect)
+            for row in dictReader2:
+                addrdata_encrypted=row['addrdata_encrypted']
+                nbytes=int(self.kyc_header['nbytes'])
+                if(len(addrdata_encrypted) == nbytes):
+                    self.kyc_addrdata=addrdata_encrypted
+                    break
+        
+        self.keys=[]
+        self.keys.append("onboard_pub_key:"+str(self.kyc_header['onboard_pub_key']))
+        self.keys.append("user_onboard_pub_key:"+str(self.kyc_header['user_onboard_pub_key']))
+        self.keys.append("nbytes:"+self.kyc_header['nbytes'])
+        #Split the long addrdata string into smaller substrings 100 chars each
+        n=100
+        kyc_addrdata_split=[self.kyc_addrdata[i:i+n] for i in range(0, len(self.kyc_addrdata), n)]
+        for kyc_addrdata in kyc_addrdata_split:
+            #pprint(kyc_addrdata)
+            self.keys.append("add:"+kyc_addrdata)            
+        self.cfg.check.tags=self.keys
 
     def submitFromGUI(self):
         self.fillDataFromGUI()
