@@ -45,6 +45,7 @@ class idcheck:
         self.importKeys(args.keys)
         
     def __init__(self, token=None, master=None):
+        self.addresses=[]
         self.token=token
         self.master=master
         self.title="CommerceBlock ID check"
@@ -53,9 +54,6 @@ class idcheck:
         self.id_api=cb_onfido.cb_onfido()
         # create an instance of the API class                                                                                                                                                     
         self.api_instance=self.id_api.api_instance
-        self.applicant=self.id_api.onfido.Applicant()
-        self.applicant.country='GBR' #This is the jurisdiction where the ID check takes place, not the applicant's home country.
-        self.address=self.id_api.onfido.Address()
         self.cfg=idcheck_config(self.id_api.onfido.Check(type='express'))
 
         #1 is both sides are required. 0 otherwise.
@@ -244,9 +242,13 @@ class idcheck:
 
     #Enter applicant data 
     def setApplicant(self, first_name, last_name, dob_year, dob_month, dob_day):
-        self.applicant.first_name=first_name
-        self.applicant.last_name=last_name
-        self.applicant.dob=datetime.date(year=int(dob_year),month=int(dob_month),day=int(dob_day))
+        self.applicant=self.id_api.onfido.Applicant(
+            country='GBR', #This is the jurisdiction where the ID check takes place, not the applicant's home country.
+            first_name=first_name,
+            last_name=last_name,
+            dob=datetime.date(year=int(dob_year),month=int(dob_month),day=int(dob_day)),
+            addresses=self.addresses
+        )
                        
     #Fill applicant data from GUI
     def fillApplicant(self):
@@ -376,11 +378,11 @@ class idcheck:
             self.progress.start()
         self.printStatus("Submitting...")
         try:
-            api_response = self.api_instance.create_applicant(data=self.applicant)
+            api_response = self.api_instance.create_applicant(self.applicant)
             self.applicant.id=api_response.id
             api_response=self.uploadIDDocument()
             api_response=self.uploadPhoto()
-            api_response=self.api_instance.create_check(self.applicant.id, data=self.cfg.check)
+            api_response=self.api_instance.create_check(self.applicant.id, self.cfg.check)
             self.printStatus("Submission complete.")
             time.sleep(1)
             self.master.quit()
