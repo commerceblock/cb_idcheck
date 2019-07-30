@@ -37,7 +37,7 @@ For sumbitting customer ID details to the idcheck vendor (e.g. Onfido). This can
 Run:
 
 
-    $ python3 idcheck.py --gui  
+    $ python3 idcheck.py --gui true
 
 
 An ID check can also be requested in a single command. See help for details:  
