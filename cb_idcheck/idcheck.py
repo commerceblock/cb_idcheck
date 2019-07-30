@@ -56,7 +56,7 @@ class idcheck:
         self.applicant=self.id_api.onfido.Applicant()
         self.applicant.country='GBR' #This is the jurisdiction where the ID check takes place, not the applicant's home country.
         self.address=self.id_api.onfido.Address()
-        self.cfg=idcheck_config(self.id_api.onfido.Check())
+        self.cfg=idcheck_config(self.id_api.onfido.Check(type='express'))
 
         #1 is both sides are required. 0 otherwise.
         self.docTypeSides={"passport": 0, 
