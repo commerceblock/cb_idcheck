@@ -11,17 +11,10 @@ class idcheck_config:
         onf=cb_onfido()
         #Fill the reports list with the required reports
         self.check.reports=[]
-        self.check.reports.append(onf.onfido.Report())
-        self.check.reports[-1].name='document'
-        self.check.reports.append(onf.onfido.Report())
-        self.check.reports[-1].name='facial_similarity'
-        self.check.reports[-1].variant='standard'
-#        self.check.reports.append(onf.onfido.Report())
-#        self.check.reports[-1].name='identity'
-#        self.check.reports[-1].variant='kyc'
-        self.check.reports.append(onf.onfido.Report())
-        self.check.reports[-1].name='watchlist'
-        self.check.reports[-1].variant='kyc'
+        self.check.reports.append(onf.onfido.Report(name='document'))
+        self.check.reports.append(onf.onfido.Report(name='facial_similarity', variant='standard'))
+#        self.check.reports.append(onf.onfido.Report(name='identity', variant='kyc'))
+        self.check.reports.append(onf.onfido.Report(name='watchlist', variant='kyc'))
 
     def __str__(self):
         result=""
