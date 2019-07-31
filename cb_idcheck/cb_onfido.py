@@ -19,7 +19,7 @@ class cb_onfido:
                   self.configuration.api_key['Authorization'] = 'token=' + self.token
 
 
-      def __init__(self, token=os.environ.get('IDCHECK_API_TOKEN', None)):
+      def __init__(self, token=None):
             self.record = record()
             self.onfido = onfido
             self.configuration = self.onfido.Configuration()
