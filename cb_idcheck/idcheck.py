@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# CoOApyright (c) 2018 The CommerceBlock Developers                                                                                                              
 # Distributed under the MIT software license, see the accompanying                                                                                             # fi# LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
 from __future__ import print_function
@@ -435,10 +435,11 @@ class idcheck:
 
 if __name__ == "__main__":
     from cb_idcheck import idcheck
-    root = tkinter.Tk()
-    idc=idcheck.idcheck(master=root)
+    idc=idcheck.idcheck()
     idc.parse_args()
     if idc.gui is True:
+        root = tkinter.Tk()
+        idc.master=root
         root.title(idc.title)
         idc.run()
         root.mainloop()            
