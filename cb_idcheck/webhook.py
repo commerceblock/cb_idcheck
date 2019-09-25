@@ -3,7 +3,6 @@
 
 from flask import Flask, request, abort
 import json
-from cb_idcheck import record
 from cb_idcheck import cb_onfido
 from pprint import pprint
 import hmac
@@ -29,8 +28,7 @@ class webhook:
                  host='localhost',
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
         self.app = Flask(__name__)
-        self.cust_record=record.record()
-        self.id_api=cb_onfido.cb_onfido(idcheck_token)
+        self.idcheck_token=idcheck_token
         self.route='/'
         self.url=url
         self.token=token
@@ -40,7 +38,13 @@ class webhook:
         self.port=port
         self.host=host
         self.idcheck=idcheck()
-   
+        self.id_api=None
+
+    def set_id_api(self, id_api=None):
+        if id_api == None:
+            self.id_api=cb_onfido.cb_onfido(self.idcheck_token)
+        else:
+            self.id_api=id_api
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -49,17 +53,24 @@ class webhook:
         parser.add_argument('--port', required=False, type=str, help="Webhook port. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
         parser.add_argument('--host', required=False, type=str, help="Webhook host. Default='localhost'", default=self.host)
         parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG, fallback=/usr/local/var/log/cb_idcheck.log", default=self.log)
-        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.id_api.token)
+        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.idcheck_token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
+        parser.add_argument('--id_api', required=False, type=str, help="ID api: local, onfido. Default=onfido", default="onfido")
    
         args = parser.parse_args(argv)
         self.token = args.token
         self.url=args.url
         self.port=args.port
         self.log=args.log
-        self.id_api.set_token(args.idcheck_token)
+        self.idcheck_token=args.idcheck_token
         self.ngrok=args.ngrok
         self.host=args.host
+        if args.id_api == str("onfido"):
+            self.id_api = cb_onfido.cb_onfido(self.idcheck_token)
+        elif args.id_api == str("local"):
+            selfid_api = cb_local.cb_local()
+        else:
+            sys.exit("Error: unknown id_api: " + args.id_api)
    
     def authenticate(self, request):
         key = urllib.parse.quote_plus(self.token).encode()
@@ -122,6 +133,8 @@ class webhook:
     def route_webhook(self):
         @self.app.route(self.route, methods=['POST'])
         def webhook():
+            if self.id_api == None:
+                self.set_id_api()
             if not self.authenticate(request):
                 logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
                 abort(401) 
@@ -133,21 +146,12 @@ class webhook:
                     print('ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck.cfg) +  '. The included report types are: ')
                     pprint(report_list)
                 else:
-                    applicant_check = self.id_api.find_applicant_check(request.json["payload"]["object"]["href"])
-                    self.cust_record.import_from_applicant_check(applicant_check)
-                    if(applicant_check[1].result=="clear"):
-                        self.cust_record.get()
-                        self.cust_record.to_file("whitelisted")
-                        print('ID Check result: clear. Added addresses to whitelist.')
-                        return 'Added addresses to whitelist.', 200
-                #The check returned 'consider' status so human intervention is required.
-                    elif(applicant_check[1].result=="consider"):
-                        self.cust_record.to_file("consider")
-                        print('ID Check result: consider. Addding check to considerlist.')
-                        return 'Added addresses to considerlist.', 200
-                #The check returned a failure and will be logged.
+                    message, retval = self.id_api.process_webhook_request(request)
+                    if retval != None:
+                        print(message)
+                        return message, retval
                     else:
-                        print('ID Check result: fail')
+                        print('ID Check result: fail')                        
             elif(request.json["payload"]["action"]=="test_action"):
                 print('Test successful.')
                 return 'Test successful.', 200
@@ -157,7 +161,11 @@ class webhook:
         if(self.ngrok==True):
             self.start_ngrok()
             self.get_ngrok_ipaddress()
+            pprint("Webhook URL = " + str(self.url))
             webhook_api_response=self.id_api.create_webhook(url=self.url)
+            pprint("finished create_webhook with api response:")
+            pprint(webhook_api_response)
+            pprint(webhook_api_response.token)
             self.token=webhook_api_response.token
 
         #Configure logging

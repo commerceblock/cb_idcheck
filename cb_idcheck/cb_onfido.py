@@ -9,7 +9,7 @@ from onfido.rest import ApiException
 from .record import record 
 from .database import database
 from pprint import pprint
-
+from cb_idcheck import record
 
 class cb_onfido:
       #Set the authentication foken for connection to onfido
@@ -20,13 +20,28 @@ class cb_onfido:
 
 
       def __init__(self, token=None):
-            self.record = record()
+            self.record = record.record()
             self.onfido = onfido
             self.configuration = self.onfido.Configuration()
             self.configuration.api_key_prefix['Authorization'] = 'Token'
             self.api_instance = self.onfido.DefaultApi()
             self.set_token(token)
 
+      def process_webhook_request(self, request):
+            applicant_check = self.find_applicant_check(request.json["payload"]["object"]["href"])
+            self.record.import_from_applicant_check(applicant_check)
+            if(applicant_check[1].result=="clear"):
+                  self.record.get()
+                  self.record.to_file("whitelisted")
+                  print('ID Check result: clear. Added addresses to whitelist.')
+                  return 'Added addresses to whitelist.', 200
+                #The check returned 'consider' status so human intervention is required.
+            elif(applicant_check[1].result=="consider"):
+                  self.cust_record.to_file("consider")
+                  print('ID Check result: consider. Addding check to considerlist.')
+                  return 'Added addresses to considerlist.', 200
+            else:
+                  return None, None
 
       #Retrieve report from href.
       def find_report(self,href):
@@ -131,12 +146,12 @@ class cb_onfido:
             pprint(db.getFromID(rec._id))
 
       def create_webhook(self, url=None):
-            data=onfido.Webhook()
-            data.url=url
+            pprint("Creating webhook data")
+            webhook=onfido.Webhook(url=url)
             self.webhook=None
             try:
                   # Create a webhook
-                  self.webhook = self.api_instance.create_webhook(data=data)
+                  self.webhook = self.api_instance.create_webhook(webhook)
                   pprint(self.webhook)
             except ApiException as e:
                   pprint(e.body)
@@ -177,7 +192,6 @@ class cb_onfido:
                   self.api_instance.destroy_applicant(applicant_id)
             except ApiException as e:
                   pprint(e.body)
-
             
 if __name__ == "__main__":
       from cb_idcheck import cb_onfido
