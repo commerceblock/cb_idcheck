@@ -13,7 +13,7 @@ class idcheck_config:
         self.check.reports=[]
         self.check.reports.append(onf.onfido.Report(name='document'))
         self.check.reports.append(onf.onfido.Report(name='facial_similarity', variant='standard'))
-        self.check.reports.append(onf.onfido.Report(name='identity', variant='kyc'))
+#        self.check.reports.append(onf.onfido.Report(name='identity', variant='kyc'))
         self.check.reports.append(onf.onfido.Report(name='watchlist', variant='kyc'))
 
     def __str__(self):
