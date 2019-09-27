@@ -4,6 +4,7 @@ COPY . /usr/src
 
 RUN set -x \
     && cd /usr/src \
+    && export FLASK_ENV=production \
     && python3 setup.py build \
     && python3 setup.py install \
     && cp depends/ngrok /usr/local/bin \

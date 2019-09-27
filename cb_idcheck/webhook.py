@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Copyright (c) 2018 The CommerceBlock Developers              A                                                                                                
 # Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
 from flask import Flask, request, abort
@@ -15,6 +15,7 @@ import subprocess, sys, time
 import smtplib
 from email.mime.text import MIMEText
 from cb_idcheck.idcheck import idcheck
+from cb_idcheck.idcheck_config import idcheck_config
 
 PYTHON=sys.executable
 SCRIPT=__file__
@@ -26,9 +27,10 @@ class webhook:
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
                  ngrok=False, 
                  host='localhost',
-                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
+                 idcheck_token_file=os.environ.get('IDCHECK_API_TOKEN_FILE', None)):
         self.app = Flask(__name__)
-        self.idcheck_token=idcheck_token
+        self.idcheck_token_file=idcheck_token_file
+        pprint(self.idcheck_token_file)
         self.route='/'
         self.url=url
         self.token=token
@@ -37,14 +39,7 @@ class webhook:
         self.ngrok_process=None
         self.port=port
         self.host=host
-        self.idcheck=idcheck()
         self.id_api=None
-
-    def set_id_api(self, id_api=None):
-        if id_api == None:
-            self.id_api=cb_onfido.cb_onfido(self.idcheck_token)
-        else:
-            self.id_api=id_api
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -53,30 +48,33 @@ class webhook:
         parser.add_argument('--port', required=False, type=str, help="Webhook port. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
         parser.add_argument('--host', required=False, type=str, help="Webhook host. Default='localhost'", default=self.host)
         parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG, fallback=/usr/local/var/log/cb_idcheck.log", default=self.log)
-        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.idcheck_token)
+        parser.add_argument('--idcheck_token_file', required=False, type=str, help="Path to a file containing the ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN_FILE", default=self.idcheck_token_file)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
         parser.add_argument('--id_api', required=False, type=str, help="ID api: local, onfido. Default=onfido", default="onfido")
+        parser.add_argument('--whitelisted_dir', required=False, type=str, help="Directory to save the whitelisted kycfiles to. Default=/storage/kycfile/whitelisted", default="/storage/kycfile//consider")
+        parser.add_argument('--consider_dir', required=False, type=str, help="Directory to save the considerlisted kycfiles to. Default=/storage/kycfile/consider", default="/storage/kycfile/consider")
    
         args = parser.parse_args(argv)
+        self.whitelisted_dir=args.whitelisted_dir
+        self.consider_dir=args.consider_dir
         self.token = args.token
         self.url=args.url
         self.port=args.port
         self.log=args.log
-        self.idcheck_token=args.idcheck_token
+        pprint(self.idcheck_token_file)
+        self.idcheck_token_file=args.idcheck_token_file
+        pprint(self.idcheck_token_file)
         self.ngrok=args.ngrok
         self.host=args.host
-        if args.id_api == str("onfido"):
-            self.id_api = cb_onfido.cb_onfido(self.idcheck_token)
-        elif args.id_api == str("local"):
-            selfid_api = cb_local.cb_local()
-        else:
-            sys.exit("Error: unknown id_api: " + args.id_api)
+        self.id_api_type=args.id_api
+
    
     def authenticate(self, request):
         key = urllib.parse.quote_plus(self.token).encode()
         message = request.data
-        auth_code=hmac.new(key, message, hashlib.sha1).hexdigest()
-        return(auth_code == request.headers["X-Signature"])
+        auth_code=hmac.new(key, message, hashlib.sha256).hexdigest()
+        pprint(request.headers)
+        return(auth_code == request.headers["X-Sha2-Signature"])
 
     #Expose local web server to the internet (https only)
     def start_ngrok(self):
@@ -100,7 +98,7 @@ class webhook:
     def verify_check_content(self, report_list=None):
         if(report_list==None):
             report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
-        for report_req in self.idcheck.cfg.check.reports:
+        for report_req in self.idcheck_config.check.reports:
             report_found=False
             for report_comp in report_list:
                 if(self.compare_reports_by_type(report_req, report_comp)):
@@ -133,8 +131,6 @@ class webhook:
     def route_webhook(self):
         @self.app.route(self.route, methods=['POST'])
         def webhook():
-            if self.id_api == None:
-                self.set_id_api()
             if not self.authenticate(request):
                 logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
                 abort(401) 
@@ -143,7 +139,7 @@ class webhook:
                 pprint(request.json)
                 report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
                 if(self.verify_check_content(report_list) == False):
-                    print('ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck.cfg) +  '. The included report types are: ')
+                    print('ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: ')
                     pprint(report_list)
                 else:
                     message, retval = self.id_api.process_webhook_request(request)
@@ -158,6 +154,16 @@ class webhook:
             abort(400)
                 
     def run(self):
+        if self.id_api_type == str("onfido"):
+            pprint("webhook - reading from token file:")
+            pprint(self.idcheck_token_file)
+            self.id_api = cb_onfido.cb_onfido(token_file=self.idcheck_token_file, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
+            self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='express'))
+        elif self.id_api_type == str("local"):
+            selfid_api = cb_local.cb_local()
+        else:
+            sys.exit("Error: unknown id_api: " + args.id_api)
+        
         if(self.ngrok==True):
             self.start_ngrok()
             self.get_ngrok_ipaddress()

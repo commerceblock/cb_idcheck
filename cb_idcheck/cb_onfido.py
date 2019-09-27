@@ -12,34 +12,41 @@ from pprint import pprint
 from cb_idcheck import record
 
 class cb_onfido:
-      #Set the authentication foken for connection to onfido
-      def set_token(self, token):
-            self.token=token
-            if(self.token != None):
-                  self.configuration.api_key['Authorization'] = 'token=' + self.token
-
-
-      def __init__(self, token=None):
+      def __init__(self, token_file=None, whitelisted_dir="whitelisted", consider_dir="consider"):
+            self.whitelisted_dir=whitelisted_dir
+            self.consider_dir=consider_dir
             self.record = record.record()
             self.onfido = onfido
             self.configuration = self.onfido.Configuration()
             self.configuration.api_key_prefix['Authorization'] = 'Token'
             self.api_instance = self.onfido.DefaultApi()
-            self.set_token(token)
+            self.token_file=token_file
+            self.set_token_from_file(self.token_file)
+            
+      def set_token_from_file(self, token_file):
+            if token_file:
+                  fp = open(token_file)
+                  token_line='token=' + fp.readline()
+                  pprint("Setting API token...")
+                  pprint(token_line)
+                  self.configuration.api_key['Authorization'] = token_line
+                  fp.close()
 
       def process_webhook_request(self, request):
             applicant_check = self.find_applicant_check(request.json["payload"]["object"]["href"])
             self.record.import_from_applicant_check(applicant_check)
             if(applicant_check[1].result=="clear"):
                   self.record.get()
-                  self.record.to_file("whitelisted")
-                  print('ID Check result: clear. Added addresses to whitelist.')
-                  return 'Added addresses to whitelist.', 200
+                  self.record.to_file(self.whitelisted_dir)
+                  message = 'ID Check result: clear. Added kycfile to whitelisted dir.'
+                  print(message)
+                  return message, 200
                 #The check returned 'consider' status so human intervention is required.
             elif(applicant_check[1].result=="consider"):
-                  self.cust_record.to_file("consider")
-                  print('ID Check result: consider. Addding check to considerlist.')
-                  return 'Added addresses to considerlist.', 200
+                  self.cust_record.to_file(self.consider_dir)
+                  message = 'ID Check result: consider. Added kycfile to consider dir.'
+                  print(message)
+                  return message, 200
             else:
                   return None, None
 
