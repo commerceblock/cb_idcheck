@@ -135,18 +135,23 @@ class webhook:
 #                pprint(request.json)
                 report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
                 if(self.verify_check_content(report_list) == False):
-                    print('ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: ')
+                    infostr='ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: '
+                    print(infostr)
+                    logging.info('%s', infostr)
                     pprint(report_list)
                 else:
                     message, retval = self.id_api.process_webhook_request(request)
                     if retval != None:
                         print(message)
+                        logging.info('%s', message)
                         return message, retval
                     else:
                         print('ID Check result: fail')                        
             elif(request.json["payload"]["action"]=="test_action"):
                 print('Test successful.')
+                logging.info('%s', infostr)
                 return 'Test successful.', 200
+            logging.info('Unable to process request: %s', request.json)
             abort(400)
                 
     def run(self):
@@ -169,7 +174,7 @@ class webhook:
             self.token=webhook_api_response.token
 
         #Configure logging
-        logging.basicConfig(filename=self.log, level=logging.WARNING)
+        logging.basicConfig(filename=self.log, level=logging.INFO)
 
         self.route_webhook()
 
