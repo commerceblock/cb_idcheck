@@ -27,10 +27,9 @@ class webhook:
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
                  ngrok=False, 
                  host='localhost',
-                 idcheck_token_file=os.environ.get('IDCHECK_API_TOKEN_FILE', None)):
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
         self.app = Flask(__name__)
-        self.idcheck_token_file=idcheck_token_file
-        pprint(self.idcheck_token_file)
+        self.idcheck_token=idcheck_token
         self.route='/'
         self.url=url
         self.token=token
@@ -48,7 +47,7 @@ class webhook:
         parser.add_argument('--port', required=False, type=str, help="Webhook port. Default=$IDCHECK_WEBHOOK_PORT", default=self.port)
         parser.add_argument('--host', required=False, type=str, help="Webhook host. Default='localhost'", default=self.host)
         parser.add_argument('--log', required=False, type=str, help="Log file. Default=$IDCHECK_LOG, fallback=/usr/local/var/log/cb_idcheck.log", default=self.log)
-        parser.add_argument('--idcheck_token_file', required=False, type=str, help="Path to a file containing the ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN_FILE", default=self.idcheck_token_file)
+        parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.idcheck_token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
         parser.add_argument('--id_api', required=False, type=str, help="ID api: local, onfido. Default=onfido", default="onfido")
         parser.add_argument('--whitelisted_dir', required=False, type=str, help="Directory to save the whitelisted kycfiles to. Default=/storage/kycfile/whitelisted", default="/storage/kycfile//consider")
@@ -61,9 +60,7 @@ class webhook:
         self.url=args.url
         self.port=args.port
         self.log=args.log
-        pprint(self.idcheck_token_file)
-        self.idcheck_token_file=args.idcheck_token_file
-        pprint(self.idcheck_token_file)
+        self.idcheck_token=args.idcheck_token
         self.ngrok=args.ngrok
         self.host=args.host
         self.id_api_type=args.id_api
@@ -73,7 +70,6 @@ class webhook:
         key = urllib.parse.quote_plus(self.token).encode()
         message = request.data
         auth_code=hmac.new(key, message, hashlib.sha256).hexdigest()
-        pprint(request.headers)
         return(auth_code == request.headers["X-Sha2-Signature"])
 
     #Expose local web server to the internet (https only)
@@ -135,8 +131,8 @@ class webhook:
                 logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
                 abort(401) 
             if(request.json["payload"]["action"]=="check.completed"):
-                print('completed check received: ')
-                pprint(request.json)
+                print('completed check received')
+#                pprint(request.json)
                 report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
                 if(self.verify_check_content(report_list) == False):
                     print('ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: ')
@@ -155,9 +151,7 @@ class webhook:
                 
     def run(self):
         if self.id_api_type == str("onfido"):
-            pprint("webhook - reading from token file:")
-            pprint(self.idcheck_token_file)
-            self.id_api = cb_onfido.cb_onfido(token_file=self.idcheck_token_file, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
+            self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
             self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='express'))
         elif self.id_api_type == str("local"):
             selfid_api = cb_local.cb_local()
@@ -180,7 +174,7 @@ class webhook:
         self.route_webhook()
 
         #Start the Flask app
-        self.app.run(host='localhost', port=self.port, use_reloader=False)
+        self.app.run(host=self.host, port=self.port, use_reloader=False)
         self.cleanup()
 
     def cleanup(self):

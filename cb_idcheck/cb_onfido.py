@@ -12,7 +12,7 @@ from pprint import pprint
 from cb_idcheck import record
 
 class cb_onfido:
-      def __init__(self, token_file=None, whitelisted_dir="whitelisted", consider_dir="consider"):
+      def __init__(self, token=None, whitelisted_dir="whitelisted", consider_dir="consider"):
             self.whitelisted_dir=whitelisted_dir
             self.consider_dir=consider_dir
             self.record = record.record()
@@ -20,17 +20,8 @@ class cb_onfido:
             self.configuration = self.onfido.Configuration()
             self.configuration.api_key_prefix['Authorization'] = 'Token'
             self.api_instance = self.onfido.DefaultApi()
-            self.token_file=token_file
-            self.set_token_from_file(self.token_file)
-            
-      def set_token_from_file(self, token_file):
-            if token_file:
-                  fp = open(token_file)
-                  token_line='token=' + fp.readline()
-                  pprint("Setting API token...")
-                  pprint(token_line)
-                  self.configuration.api_key['Authorization'] = token_line
-                  fp.close()
+            if token:
+                  self.configuration.api_key['Authorization'] = 'token=' + token
 
       def process_webhook_request(self, request):
             applicant_check = self.find_applicant_check(request.json["payload"]["object"]["href"])
