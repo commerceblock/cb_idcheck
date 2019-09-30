@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 set -e
 
 if [ -f /run/secrets/onfido_token ] && [ -f /run/secrets/onfido_webhook_token ]; then
