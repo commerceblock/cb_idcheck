@@ -25,10 +25,13 @@ class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
                  url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
-                 log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'), 
+                 log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'),
+                 host=os.environ.get('IDCHECK_HOST', 'localhost'),
+                 id_api=os.environ.get('ID_API', 'onfido'), 
                  ngrok=False, 
-                 host='localhost',
-                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None)):
+                 idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
+                 whitelisted_dir=os.environ.get('WHITELISTED_DIR', None),
+                 consider_dir=os.environ.get('CONSIDER_DIR', None)):
         self.app = Flask(__name__)
         self.idcheck_token=idcheck_token
         self.route='/'
@@ -39,7 +42,7 @@ class webhook:
         self.ngrok_process=None
         self.port=port
         self.host=host
-        self.id_api=None
+        self.id_api=id_api
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
