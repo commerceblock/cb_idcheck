@@ -1,5 +1,6 @@
-# Copyright (c) 2018 The CommerceBlock Developers              A                                                                                                
-# Distributed under the MIT software license, see the accompanying                                                                                             # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
 from flask import Flask, request, abort
 import json
@@ -148,9 +149,10 @@ class webhook:
                     else:
                         print('ID Check result: fail')                        
             elif(request.json["payload"]["action"]=="test_action"):
+                infostr='Test successful.'
                 print('Test successful.')
                 logging.info('%s', infostr)
-                return 'Test successful.', 200
+                return infostr, 200
             logging.info('Unable to process request: %s', request.json)
             abort(400)
                 
