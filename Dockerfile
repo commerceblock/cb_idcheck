@@ -1,5 +1,10 @@
-FROM python:3.6.6-stretch
+FROM tiangolo/uwsgi-nginx-flask:python3.7
 
+ENV LISTEN_PORT 59327
+
+EXPOSE 59327
+
+COPY ./cb_idcheck /app
 COPY . /usr/src/package
 
 RUN set -x \
