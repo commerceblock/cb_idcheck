@@ -21,6 +21,8 @@ from cb_idcheck.idcheck_config import idcheck_config
 PYTHON=sys.executable
 SCRIPT=__file__
 
+app = Flask(__name__)
+
 class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
                  url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
@@ -32,7 +34,6 @@ class webhook:
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
                  whitelisted_dir=os.environ.get('WHITELISTED_DIR', None),
                  consider_dir=os.environ.get('CONSIDER_DIR', None)):
-        self.app = Flask(__name__)
         self.idcheck_token=idcheck_token
         self.route='/'
         self.url=url
@@ -129,7 +130,7 @@ class webhook:
         return True
 
     def route_webhook(self):
-        @self.app.route(self.route, methods=['POST'])
+        @app.route(self.route, methods=['POST'])
         def webhook():
             if not self.authenticate(request):
                 logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
@@ -184,7 +185,7 @@ class webhook:
         self.route_webhook()
 
         #Start the Flask app
-        self.app.run(host=self.host, port=self.port, use_reloader=False)
+        app.run(host=self.host, port=self.port, use_reloader=False)
         self.cleanup()
 
     def cleanup(self):
@@ -201,3 +202,4 @@ if __name__ == "__main__":
     wh=webhook.webhook()
     wh.parse_args()
     wh.run()
+
