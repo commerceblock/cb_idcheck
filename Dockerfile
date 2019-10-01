@@ -5,7 +5,7 @@ ENV LISTEN_PORT 59327
 EXPOSE 59327
 
 COPY ./cb_idcheck /app
-COPY uswgi.ini /app
+COPY uwsgi.ini /app
 COPY prestart.sh /app
 COPY . /usr/src/package
 
