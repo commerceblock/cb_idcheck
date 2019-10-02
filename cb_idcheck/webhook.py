@@ -43,7 +43,9 @@ class webhook:
         self.ngrok_process=None
         self.port=port
         self.host=host
-        self.id_api=id_api
+        self.id_api_type=id_api
+        self.whitelisted_dir=whitelisted_dir
+        self.consider_dir=consider_dir
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -129,38 +131,50 @@ class webhook:
             return False
         return True
 
+    def hello(self):
+        return "Hello World from cb_idcheck webhook class"
+
+    def process_post(self, request):
+        if not self.authenticate(request):
+            logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
+            abort(401) 
+        if(request.json["payload"]["action"]=="check.completed"):
+            print('completed check received')
+            report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
+            if(self.verify_check_content(report_list) == False):
+                infostr='ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: '
+                print(infostr)
+                logging.info('%s', infostr)
+                pprint(report_list)
+            else:
+                message, retval = self.id_api.process_webhook_request(request)
+                if retval != None:
+                    print(message)
+                    logging.info('%s', message)
+                    return message, retval
+                else:
+                    print('ID Check result: fail')                        
+        elif(request.json["payload"]["action"]=="test_action"):
+            infostr='Test successful.'
+            print('Test successful.')
+            logging.info('%s', infostr)
+            return infostr, 200
+        logging.info('Unable to process request: %s', request.json)
+        abort(400)
+
+        
+    
     def route_webhook(self):
+        @app.route("/")
+        def hello():
+            return self.hello()
+
+        
         @app.route(self.route, methods=['POST'])
         def webhook():
-            if not self.authenticate(request):
-                logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
-                abort(401) 
-            if(request.json["payload"]["action"]=="check.completed"):
-                print('completed check received')
-#                pprint(request.json)
-                report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
-                if(self.verify_check_content(report_list) == False):
-                    infostr='ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: '
-                    print(infostr)
-                    logging.info('%s', infostr)
-                    pprint(report_list)
-                else:
-                    message, retval = self.id_api.process_webhook_request(request)
-                    if retval != None:
-                        print(message)
-                        logging.info('%s', message)
-                        return message, retval
-                    else:
-                        print('ID Check result: fail')                        
-            elif(request.json["payload"]["action"]=="test_action"):
-                infostr='Test successful.'
-                print('Test successful.')
-                logging.info('%s', infostr)
-                return infostr, 200
-            logging.info('Unable to process request: %s', request.json)
-            abort(400)
+            return self.process_post(request)
                 
-    def run(self):
+    def init(self):
         if self.id_api_type == str("onfido"):
             self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
             self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='express'))
@@ -184,7 +198,8 @@ class webhook:
 
         self.route_webhook()
 
-        #Start the Flask app
+    #Start the Flask app
+    def run(self):
         app.run(host=self.host, port=self.port, use_reloader=False)
         self.cleanup()
 
@@ -201,5 +216,6 @@ if __name__ == "__main__":
     from cb_idcheck import webhook
     wh=webhook.webhook()
     wh.parse_args()
+    wh.init()
     wh.run()
 
