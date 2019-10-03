@@ -9,8 +9,9 @@ import collections
 from pprint import pprint
 
 class record:
-    def __init__(self, _id='',onboard_pub_key='',user_onboard_pub_key='', addresses=''):
-        self._id=_id #applicant id
+    def __init__(self, _applicant_id='', _check_id='', onboard_pub_key='',user_onboard_pub_key='', addresses=''):
+        self._applicant_id=_applicant_id 
+        self._check_id=_check_id 
         self.onboard_pub_key=onboard_pub_key
         self.user_onboard_pub_key=user_onboard_pub_key
         self.nbytes=""
@@ -19,17 +20,19 @@ class record:
 
 
     def get(self):
-        return { "_id" : self._id,
-                "onboard_pub_key" : self.onboard_pub_key,
-                "user_onboard_pub_key" : self.user_onboard_pub_key,
-                "nbytes" : len(self.addresses),
-                "addresses" : self.addresses,
+        return { "_applicant_id" : self._applicant_id,
+                 "_check_id" : self._check_id,
+                 "onboard_pub_key" : self.onboard_pub_key,
+                 "user_onboard_pub_key" : self.user_onboard_pub_key,
+                 "nbytes" : len(self.addresses),
+                 "addresses" : self.addresses,
                 } 
     
 
     #Import the ID and keys from a applicant_check = [applicant, check]
     def import_from_applicant_check(self, applicant_check):
-        self._id=applicant_check[0].id
+        self._applicant_id=applicant_check[0].id
+        self._check_id=applicant_check[1].id
         self.addresses=""        
         for tag in applicant_check[1].tags:
             tagItems=str(tag).split(":")
@@ -43,8 +46,10 @@ class record:
                 self.onboard_pub_key=tagItems[1]
 
     def to_file(self, outdir):
-        filename=str(outdir)+"/kyc_"+str(self._id)+".dat"
+        filename=str(outdir)+"/kyc_"+str(self._check_id)+".dat"
         f=open(filename, 'w')
+        f.write(' '.join('#', "applicant-id:", str(self._applicant_id)))
+        f.write(' '.join('#', "check-id", str(self._check_id)))
         f.write(' '.join((str(self.onboard_pub_key), str(self.user_onboard_pub_key), str(self.nbytes))))
         f.write("\n")
         f.write(str(self.addresses))
