@@ -21,7 +21,6 @@ from cb_idcheck.idcheck_config import idcheck_config
 PYTHON=sys.executable
 SCRIPT=__file__
 
-app = Flask(__name__)
 
 class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
@@ -73,11 +72,13 @@ class webhook:
         self.id_api_type=args.id_api
 
    
-    def authenticate(self, request):
+    def authenticate(self, req):
+        logging.info('webhook:authenticate() - request headers: %s', str(req.headers))
+        logging.info('webhook:authenticate() - request data: %s', str(req.data))
         key = urllib.parse.quote_plus(self.token).encode()
-        message = request.data
+        message = req.data
         auth_code=hmac.new(key, message, hashlib.sha256).hexdigest()
-        return(auth_code == request.headers["X-Sha2-Signature"])
+        return(auth_code == req.headers["X-Sha2-Signature"])
 
     #Expose local web server to the internet (https only)
     def start_ngrok(self):
@@ -134,32 +135,34 @@ class webhook:
     def hello(self):
         return "Hello World from cb_idcheck webhook class"
 
-    def process_post(self, request):
-        if not self.authenticate(request):
+    def process_post(self, req):
+        logging.info('webhook:process_post() - request headers: %s', str(req.headers))
+        logging.info('webhook:process_post() - request data: %s', str(req.data))
+        if not self.authenticate(req):
             logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
             abort(401) 
-        if(request.json["payload"]["action"]=="check.completed"):
+        if(req.json["payload"]["action"]=="check.completed"):
             print('completed check received')
-            report_list=self.id_api.list_reports(request.json["payload"]["object"]["id"])
+            report_list=self.id_api.list_reports(req.json["payload"]["object"]["id"])
             if(self.verify_check_content(report_list) == False):
                 infostr='ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: '
                 print(infostr)
                 logging.info('%s', infostr)
                 pprint(report_list)
             else:
-                message, retval = self.id_api.process_webhook_request(request)
+                message, retval = self.id_api.process_webhook_request(req)
                 if retval != None:
                     print(message)
                     logging.info('%s', message)
                     return message, retval
                 else:
                     print('ID Check result: fail')                        
-        elif(request.json["payload"]["action"]=="test_action"):
+        elif(req.json["payload"]["action"]=="test_action"):
             infostr='Test successful.'
             print('Test successful.')
             logging.info('%s', infostr)
             return infostr, 200
-        logging.info('Unable to process request: %s', request.json)
+        logging.info('Unable to process request: %s', req.json)
         abort(400)
 
         
@@ -196,10 +199,10 @@ class webhook:
         #Configure logging
         logging.basicConfig(filename=self.log, level=logging.INFO)
 
-        self.route_webhook()
 
     #Start the Flask app
     def run(self):
+        self.route_webhook()
         app.run(host=self.host, port=self.port, use_reloader=False)
         self.cleanup()
 
