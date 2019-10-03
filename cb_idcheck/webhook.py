@@ -73,8 +73,6 @@ class webhook:
 
    
     def authenticate(self, req):
-        logging.info('webhook:authenticate() - request headers: %s', str(req.headers))
-        logging.info('webhook:authenticate() - request data: %s', str(req.data))
         key = urllib.parse.quote_plus(self.token).encode()
         message = req.data
         auth_code=hmac.new(key, message, hashlib.sha256).hexdigest()
@@ -136,11 +134,9 @@ class webhook:
         return "Hello World from cb_idcheck webhook class"
 
     def process_post(self, req):
-        logging.info('webhook:process_post() - request headers: %s', str(req.headers))
-        logging.info('webhook:process_post() - request data: %s', str(req.data))
         if not self.authenticate(req):
             logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
-            abort(401) 
+            abort(401)
         if(req.json["payload"]["action"]=="check.completed"):
             print('completed check received')
             report_list=self.id_api.list_reports(req.json["payload"]["object"]["id"])
