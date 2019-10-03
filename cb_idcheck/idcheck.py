@@ -54,7 +54,7 @@ class idcheck:
         self.idcheck_token=args.token
         self.id_api=cb_onfido.cb_onfido(token=self.idcheck_token)
         self.api_instance=self.id_api.api_instance
-        self.cfg=idcheck_config(self.id_api.onfido.Check(type='express'))
+        self.cfg=idcheck_config(self.id_api.onfido.Check(type='standard'))
         self.gui = args.gui
         self.setApplicant(args.first_name, args.last_name, args.dob_year, args.dob_month, args.dob_day, args.email)
         self.setIDDocument(args.idDocType, args.idDocSide1, args.idDocSide2)
