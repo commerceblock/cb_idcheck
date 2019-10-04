@@ -7,7 +7,7 @@ from cb_idcheck.cb_onfido import cb_onfido
 class idcheck_config:
     def __init__(self,check):
         self.check=check
-        self.check.type='express'
+        self.check.type='standard'
         onf=cb_onfido()
         #Fill the reports list with the required reports
         self.check.reports=[]
