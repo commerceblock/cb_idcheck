@@ -186,7 +186,7 @@ class cb_onfido:
             except ApiException as e:
                   logging.warning(e.body)
             if reports_list=None:
-                  return None
+                  return []
             return reports_list.reports
 
       def destroy_applicant(self, applicant_id):
