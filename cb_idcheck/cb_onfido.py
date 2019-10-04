@@ -158,13 +158,16 @@ class cb_onfido:
       def list_checks(self, customer_id):
             #Find all checks for customer and put them in an array
             checks_list = []
-            templist= []
             n_page=1
             while(True):
+                  templist=None
                   try:
                         templist=self.api_instance.list_checks(customer_id, page=n_page)
                   except ApiException as e:
-                        pprint(e.body)
+                        logging.warning(e.body)
+                        break
+                  if templist == None:
+                        break
                   length = len(templist.checks)
                   if(len(templist.checks)>0):
                         checks_list.extend(templist.checks)
@@ -176,13 +179,14 @@ class cb_onfido:
 
       def list_reports(self, check_id):
             #Find all reports for a check and put them in an array
-            reports_list = []
-            templist= []
             n_page=1
+            reports_list=None
             try:
                   reports_list=self.api_instance.list_reports(check_id)
             except ApiException as e:
-                  pprint(e.body)
+                  logging.warning(e.body)
+            if reports_list=None:
+                  return None
             return reports_list.reports
 
       def destroy_applicant(self, applicant_id):
