@@ -180,12 +180,12 @@ class cb_onfido:
       def list_reports(self, check_id):
             #Find all reports for a check and put them in an array
             n_page=1
-            reports_list=None
+            reports_list == None
             try:
                   reports_list=self.api_instance.list_reports(check_id)
             except ApiException as e:
                   logging.warning(e.body)
-            if reports_list=None:
+            if reports_list == None:
                   return []
             return reports_list.reports
 
