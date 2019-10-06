@@ -21,6 +21,8 @@ from cb_idcheck.idcheck_config import idcheck_config
 PYTHON=sys.executable
 SCRIPT=__file__
 
+#if 'app' not in globals():
+#    app=Flask(__name__)
 
 class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
@@ -56,7 +58,7 @@ class webhook:
         parser.add_argument('--idcheck_token', required=False, type=str, help="ID check vendor (e.g. Onfido) API token. Default=$IDCHECK_API_TOKEN", default=self.idcheck_token)
         parser.add_argument('--ngrok', required=False, type=bool, help="Bool. Expose local web server to the internet using ngrok?", default=self.ngrok)
         parser.add_argument('--id_api', required=False, type=str, help="ID api: local, onfido. Default=onfido", default="onfido")
-        parser.add_argument('--whitelisted_dir', required=False, type=str, help="Directory to save the whitelisted kycfiles to. Default=/storage/kycfile/whitelisted", default="/storage/kycfile//consider")
+        parser.add_argument('--whitelisted_dir', required=False, type=str, help="Directory to save the whitelisted kycfiles to. Default=/storage/kycfile/whitelisted", default="/storage/kycfile/whitelisted")
         parser.add_argument('--consider_dir', required=False, type=str, help="Directory to save the considerlisted kycfiles to. Default=/storage/kycfile/consider", default="/storage/kycfile/consider")
    
         args = parser.parse_args(argv)
