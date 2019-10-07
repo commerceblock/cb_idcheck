@@ -49,7 +49,9 @@ class record:
         filename=str(outdir)+"/kyc_"+str(self._check_id)+".dat"
         f=open(filename, 'w')
         f.write("#applicant-id: " + str(self._applicant_id))
+        f.write("\n")
         f.write("#check-id" + str(self._check_id))
+        f.write("\n")
         f.write(' '.join((str(self.onboard_pub_key), str(self.user_onboard_pub_key), str(self.nbytes))))
         f.write("\n")
         f.write(str(self.addresses))
