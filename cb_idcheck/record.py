@@ -38,6 +38,8 @@ class record:
             tagItems=str(tag).split(":")
             if tagItems[0] == "add":
                 self.addresses+=tagItems[1]
+            if tagItems[0] == "addrdata_encrypted":
+                self.addresses+=tagItems[1]
             if tagItems[0] == "nbytes":
                 self.nbytes=tagItems[1]
             if tagItems[0] == "user_onboard_pub_key":

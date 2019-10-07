@@ -1,5 +1,6 @@
-# CoOApyright (c) 2018 The CommerceBlock Developers                       OA                                                                                       
-# Distributed under the MIT software license, see the accompanying                                                                                             # fi# LICENSE or http://www.opensource.org/licenses/mit-license.php.  
+# CoApyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
 from __future__ import print_function
 import sys
