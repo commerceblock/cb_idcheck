@@ -29,23 +29,32 @@ class cb_onfido:
       def get_kycfile_from_href(self, href):
             applicant_check = self.find_applicant_check(href)
             return self.get_kycfile_from_applicant_check(applicant_check)
-            
+
+      def get_checkid_from_request(self, req):
+            return self.get_checkid_from_href(request.json["payload"]["object"]["href"])
+
+      def get_checkid_from_href(self, href):
+            applicant_check = self.find_applicant_check(href)
+            return appliccant_check[1].id
+
       def get_kycfile_from_applicant_check(self, applicant_check):
             self.record.import_from_applicant_check(applicant_check)
             if(applicant_check[1].result=="clear"):
                   self.record.get()
                   self.record.to_file(self.whitelisted_dir)
-                  message = 'ID Check result: clear. Added kycfile to whitelisted dir.'
+                  message = 'ID Check result: clear. Added kycfile to whitelisted dir. check-id:' + str(applicant_check[1].id)
                   print(message)
                   return message, 200
                 #The check returned 'consider' status so human intervention is required.
             elif(applicant_check[1].result=="consider"):
                   self.cust_record.to_file(self.consider_dir)
-                  message = 'ID Check result: consider. Added kycfile to consider dir.'
+                  message = 'ID Check result: consider. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
                   print(message)
                   return message, 200
             else:
-                  return None, None
+                  message = 'Unknown ID check result. check-id:' + str(applicant_check[1].id)
+                  print(message)
+                  return message, 200
             
             
       #Retrieve report from href.

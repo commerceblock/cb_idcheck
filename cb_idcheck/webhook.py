@@ -25,8 +25,8 @@ from email.mime.text import MIMEText
 PYTHON=sys.executable
 SCRIPT=__file__
 
-#if 'app' not in globals():
-#    app=Flask(__name__)
+if 'app' not in globals():
+    app=Flask(__name__)
 
 class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
@@ -72,8 +72,8 @@ class webhook:
         parser.add_argument('--smtp_server', required=False, type=str, help="SMTP server", default=None)
         parser.add_argument('--smtp_port', required=False, type=str, help="SMTP port", default=None)
         parser.add_argument('--email_from', required=False, type=str, help="The FROM email address", default=None)
-        parser.add_argument('--name_from', required=False, type=str, help="The FROM name", default=None)
-        parser.add_argument('--complete_template', required=False, type=str, help="The idcheck completeion email temp[late", default="Dear ${TO_NAME},\n\n This email is to confirm that you have passed our identity check. Please consult your wallet for confirmation of address whitelisting.\n\n Kind Regards,\n\n ${FROM_NAME}")
+        parser.add_argument('--email_subject', required=False, type=str, help="The email subject", default=None)
+        parser.add_argument('--email_template_file', required=False, type=str, help="The idcheck completeion email template", default=None)
 
         args = parser.parse_args(argv)
         self.whitelisted_dir=args.whitelisted_dir
@@ -104,12 +104,19 @@ class webhook:
         else:
             self.smtp_conf["password"]=None
 
+        p=args.email_template_file
+        if os.path.exists(p):
+            with open(p) as f:
+                self.smtp_conf["complete_template"]=Template(f.read())
+        else:
+            self.smtp_conf["compete_template"]=None
+
+            
         self.smtp_conf["server"]=args.smtp_server
         self.smtp_conf["port"]=args.smtp_port
         self.smtp_conf["email_from"]=args.email_from
-        self.smtp_conf["name_from"]=args.name_from
+        self.smtp_conf["email_subject"]=args.email_subject
 
-        self.smtp_conf["complete_template"]=Template(args.complete_template)
         bSMTP=True
         for item in self.smtp_conf:
             if item == None:
@@ -199,24 +206,86 @@ class webhook:
                     self.send_confirmation_email()
                     return message, retval
                 else:
-                    print('ID Check result: fail')                        
+                    print('ID Check result: fail')
+        elif(req.json["payload"]["action"]=="check.started"):
+            infostr="Check started. check-id: " + str(self.id_api.get_checkid_from_request(req))
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="check.reopened"):
+            infostr="Check reopened. check-id: " + str(self.id_api.get_checkid_from_request(req))
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="check.withdrawn"):
+            infostr="Check withdrawn. check-id: " + str(self.id_api.get_checkid_from_request(req))
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="check.form_opened"):
+            infostr="Check form opened. check-id: " + str(self.id_api.get_checkid_from_request(req))
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="check.form_completed"):
+            infostr="Check form completed. check-id: " + str(self.id_api.get_checkid_from_request(req))
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="report.withdrawn"):
+            infostr="Report withdrawn"
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="report.resumed"):
+            infostr="Report resumed"
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="report.cancelled"):
+            infostr="Report cancelled"
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="report.awaiting_approval"):
+            infostr="Report awaiting approval"
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+
+        elif(req.json["payload"]["action"]=="report.completed"):
+            infostr="Report completed"
+            print(infostr)
+            logging.info('%s', infostr)
+            return infostr, 200
+        
         elif(req.json["payload"]["action"]=="test_action"):
             infostr='Test successful.'
+            print(infostr)
             print('Test successful.')
             logging.info('%s', infostr)
             return infostr, 200
         logging.info('Unable to process request: %s', req.json)
-        abort(400)
+        print("Unable to process request: {}".format(req.json))
+        return "Unable to process request: {}".format(req.json), 400
 
     def send_confirmation_email(self):
         if self.smtp_conf == None:
             return
         full_name=str(self.id_api.record.first_name) + " " + str(self.id_api.record.last_name)        
         msg = MIMEMultipart()       # create a message
-        message = self.smtp_conf["complete_template"].substitute(TO_NAME=full_name, FROM_NAME=self.smtp_conf["name_from"])
+        message = self.smtp_conf["complete_template"].substitute(TO_NAME=full_name)
         msg['From']=self.smtp_conf["email_from"]
         msg['To']=self.id_api.record.email
-        msg['Subject']="ID check confirmation"
+        msg['Subject']=self.smtp_conf["email_subject"]
         msg.attach(MIMEText(message, 'plain'))
         try:
             s = smtplib.SMTP_SSL(host='email-smtp.eu-west-1.amazonaws.com', port=465)
