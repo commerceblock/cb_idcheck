@@ -67,7 +67,14 @@ class webhook:
         parser.add_argument('--id_api', required=False, type=str, help="ID api: local, onfido. Default=onfido", default="onfido")
         parser.add_argument('--whitelisted_dir', required=False, type=str, help="Directory to save the whitelisted kycfiles to. Default=/storage/kycfile/whitelisted", default="/storage/kycfile/whitelisted")
         parser.add_argument('--consider_dir', required=False, type=str, help="Directory to save the considerlisted kycfiles to. Default=/storage/kycfile/consider", default="/storage/kycfile/consider")
-   
+        parser.add_argument('--smtp_username_file', required=False, type=str, help="File containing the SMTP username.", default=None)
+        parser.add_argument('--smtp_password_file', required=False, type=str, help="File containing the SMTP password.", default=None)
+        parser.add_argument('--smtp_server', required=False, type=str, help="SMTP server", default=None)
+        parser.add_argument('--smtp_port', required=False, type=str, help="SMTP port", default=None)
+        parser.add_argument('--email_from', required=False, type=str, help="The FROM email address", default=None)
+        parser.add_argument('--name_from', required=False, type=str, help="The FROM name", default=None)
+        parser.add_argument('--complete_template', required=False, type=str, help="The idcheck completeion email temp[late", default="Dear ${TO_NAME},\n\n This email is to confirm that you have passed our identity check. Please consult your wallet for confirmation of address whitelisting.\n\n Kind Regards,\n\n ${FROM_NAME}")
+
         args = parser.parse_args(argv)
         self.whitelisted_dir=args.whitelisted_dir
         self.consider_dir=args.consider_dir
@@ -79,7 +86,37 @@ class webhook:
         self.ngrok=args.ngrok
         self.host=args.host
         self.id_api_type=args.id_api
+        #SMTP email config
 
+        if self.smtp_conf == None:
+            self.smtp_conf={}
+        p=args.smtp_username_file
+        if os.path.exists(p):
+            with open(p) as f:
+                self.smtp_conf["username"]=f.readline().rstrip()
+        else:
+            self.smtp_conf["username"]=None
+
+        p=args.smtp_password_file
+        if os.path.exists(p):
+            with open(p) as f:
+                self.smtp_conf["password"]=f.readline().rstrip()
+        else:
+            self.smtp_conf["password"]=None
+
+        self.smtp_conf["server"]=args.smtp_server
+        self.smtp_conf["port"]=args.smtp_port
+        self.smtp_conf["email_from"]=args.email_from
+        self.smtp_conf["name_from"]=args.name_from
+
+        self.smtp_conf["complete_template"]=Template(args.complete_template)
+        bSMTP=True
+        for item in self.smtp_conf:
+            if item == None:
+                bSMTP=False
+                break
+        if bSMTP == False:
+            self.smtp_conf=None
    
     def authenticate(self, req):
         key = urllib.parse.quote_plus(self.token).encode()
@@ -172,18 +209,18 @@ class webhook:
         abort(400)
 
     def send_confirmation_email(self):
-        if smtp_conf == None:
+        if self.smtp_conf == None:
             return
         full_name=str(self.id_api.record.first_name) + " " + str(self.id_api.record.last_name)        
         msg = MIMEMultipart()       # create a message
-        message = self.smtp_conf["complete_template"].substitute(TO_NAME=full_name, FROM_NAME=self.smtp_conf["email_from"])
+        message = self.smtp_conf["complete_template"].substitute(TO_NAME=full_name, FROM_NAME=self.smtp_conf["name_from"])
         msg['From']=self.smtp_conf["email_from"]
         msg['To']=self.id_api.record.email
         msg['Subject']="ID check confirmation"
         msg.attach(MIMEText(message, 'plain'))
         try:
             s = smtplib.SMTP_SSL(host='email-smtp.eu-west-1.amazonaws.com', port=465)
-            s.login(USERNAME, PASSWORD)
+            s.login(self.smtp_conf["username"], self.smtp_conf["password"])
             s.send_message(msg)
         except Exception as e:
             print(e)

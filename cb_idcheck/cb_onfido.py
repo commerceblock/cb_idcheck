@@ -27,7 +27,7 @@ class cb_onfido:
             return self.get_kycfile_from_href(request.json["payload"]["object"]["href"])
 
       def get_kycfile_from_href(self, href):
-            applicant_check = self.find_applicant_check(request.json["payload"]["object"]["href"])
+            applicant_check = self.find_applicant_check(href)
             return self.get_kycfile_from_applicant_check(applicant_check)
             
       def get_kycfile_from_applicant_check(self, applicant_check):
