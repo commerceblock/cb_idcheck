@@ -24,7 +24,13 @@ class cb_onfido:
                   self.configuration.api_key['Authorization'] = 'token=' + token
 
       def process_webhook_request(self, request):
+            return self.get_kycfile_from_href(request.json["payload"]["object"]["href"])
+
+      def get_kycfile_from_href(self, href):
             applicant_check = self.find_applicant_check(request.json["payload"]["object"]["href"])
+            return self.get_kycfile_from_applicant_check(applicant_check)
+            
+      def get_kycfile_from_applicant_check(self, applicant_check):
             self.record.import_from_applicant_check(applicant_check)
             if(applicant_check[1].result=="clear"):
                   self.record.get()
@@ -40,7 +46,8 @@ class cb_onfido:
                   return message, 200
             else:
                   return None, None
-
+            
+            
       #Retrieve report from href.
       def find_report(self,href):
             check_search="/checks/"

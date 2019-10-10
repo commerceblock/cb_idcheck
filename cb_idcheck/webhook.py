@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The CommerceBlock Developers                                                                                                
+# Copyright (c) 2018 TAhe CommerceBlock Developers                                                                                                
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
@@ -14,15 +14,19 @@ import urllib, os
 import argparse
 import subprocess, sys, time
 import smtplib
+import ssl
+from string import Template
 from email.mime.text import MIMEText
 from cb_idcheck.idcheck import idcheck
 from cb_idcheck.idcheck_config import idcheck_config
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 PYTHON=sys.executable
 SCRIPT=__file__
 
-#if 'app' not in globals():
-#    app=Flask(__name__)
+if 'app' not in globals():
+    app=Flask(__name__)
 
 class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
@@ -34,7 +38,9 @@ class webhook:
                  ngrok=False, 
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
                  whitelisted_dir=os.environ.get('WHITELISTED_DIR', None),
-                 consider_dir=os.environ.get('CONSIDER_DIR', None)):
+                 consider_dir=os.environ.get('CONSIDER_DIR', None),
+                 smtp_conf=None):
+        ssl.create_default_context()
         self.idcheck_token=idcheck_token
         self.route='/'
         self.url=url
@@ -47,7 +53,8 @@ class webhook:
         self.id_api_type=id_api
         self.whitelisted_dir=whitelisted_dir
         self.consider_dir=consider_dir
-
+        self.smtp_conf=smtp_conf
+        
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
         parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
@@ -152,6 +159,7 @@ class webhook:
                 if retval != None:
                     print(message)
                     logging.info('%s', message)
+                    self.send_confirmation_email()
                     return message, retval
                 else:
                     print('ID Check result: fail')                        
@@ -163,7 +171,25 @@ class webhook:
         logging.info('Unable to process request: %s', req.json)
         abort(400)
 
-        
+    def send_confirmation_email(self):
+        if smtp_conf == None:
+            return
+        full_name=str(self.id_api.record.first_name) + " " + str(self.id_api.record.last_name)        
+        msg = MIMEMultipart()       # create a message
+        message = self.smtp_conf["complete_template"].substitute(TO_NAME=full_name, FROM_NAME=self.smtp_conf["email_from"])
+        msg['From']=self.smtp_conf["email_from"]
+        msg['To']=self.id_api.record.email
+        msg['Subject']="ID check confirmation"
+        msg.attach(MIMEText(message, 'plain'))
+        try:
+            s = smtplib.SMTP_SSL(host='email-smtp.eu-west-1.amazonaws.com', port=465)
+            s.login(USERNAME, PASSWORD)
+            s.send_message(msg)
+        except Exception as e:
+            print(e)
+            logging.error('cb_idcheck.webhook.send_confirmation_email: ' + str(datetime.now()) + ' ' + str(e))
+            
+        del msg
     
     def route_webhook(self):
         @app.route("/")
@@ -174,8 +200,12 @@ class webhook:
         @app.route(self.route, methods=['POST'])
         def webhook():
             return self.process_post(request)
-                
+
+    def init_smtp(self):
+
+        
     def init(self):
+        self.init_smtp()
         if self.id_api_type == str("onfido"):
             self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
             self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='standard'))

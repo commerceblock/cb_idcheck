@@ -9,9 +9,12 @@ import collections
 from pprint import pprint
 
 class record:
-    def __init__(self, _applicant_id='', _check_id='', onboard_pub_key='',user_onboard_pub_key='', addresses=''):
+    def __init__(self, _applicant_id='', _check_id='', first_name='', last_name='', email='', onboard_pub_key='',user_onboard_pub_key='', addresses=''):
         self._applicant_id=_applicant_id 
-        self._check_id=_check_id 
+        self._check_id=_check_id
+        self.first_name=first_name
+        self.last_name=last_name
+        self.email=email
         self.onboard_pub_key=onboard_pub_key
         self.user_onboard_pub_key=user_onboard_pub_key
         self.nbytes=""
@@ -22,6 +25,9 @@ class record:
     def get(self):
         return { "_applicant_id" : self._applicant_id,
                  "_check_id" : self._check_id,
+                 "first_name" : self.first_name,
+                 "last_name" : self.last_name,
+                 "email" : self.email,
                  "onboard_pub_key" : self.onboard_pub_key,
                  "user_onboard_pub_key" : self.user_onboard_pub_key,
                  "nbytes" : len(self.addresses),
@@ -32,6 +38,9 @@ class record:
     #Import the ID and keys from a applicant_check = [applicant, check]
     def import_from_applicant_check(self, applicant_check):
         self._applicant_id=applicant_check[0].id
+        self.first_name=applicant_check[0].first_name
+        self.last_name=applicant_check[0].last_name
+        self.email=applicant_check[0].email
         self._check_id=applicant_check[1].id
         self.addresses=""        
         for tag in applicant_check[1].tags:
