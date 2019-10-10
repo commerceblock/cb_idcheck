@@ -204,7 +204,7 @@ class webhook:
     def init(self):
         if self.id_api_type == str("onfido"):
             self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
-            self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='standard'))
+            self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='express'))
         elif self.id_api_type == str("local"):
             selfid_api = cb_local.cb_local()
         else:
