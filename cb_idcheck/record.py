@@ -43,6 +43,10 @@ class record:
         self.email=applicant_check[0].email
         self._check_id=applicant_check[1].id
         self.addresses=""        
+        self.nbytes=None
+        self.user_onboard_pub_key=None
+        self.onboard_pub_key=None
+
         for tag in applicant_check[1].tags:
             tagItems=str(tag).split(":")
             if tagItems[0] == "add":
@@ -55,7 +59,18 @@ class record:
                 self.user_onboard_pub_key=tagItems[1]
             if tagItems[0] == "onboard_pub_key":
                 self.onboard_pub_key=tagItems[1]
+                
+        if len(self.addresses) == 0:
+            return False
+        if self.nbytes == None:
+            return False
+        if self.user_onboard_pub_key == None:
+            return False
+        if self.onboard_pub_key == None:
+            return False
 
+        return True
+                
     def to_file(self, outdir):
         filename=str(outdir)+"/kyc_"+str(self._check_id)+".dat"
         f=open(filename, 'w')

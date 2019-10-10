@@ -206,6 +206,8 @@ class webhook:
                 print(infostr)
                 logging.info('%s', infostr)
                 pprint(report_list)
+                self.send_fail_email()
+                return infostr, 200
             else:
                 message, retval = self.id_api.process_webhook_request(req)
                 if retval != None:
@@ -291,9 +293,13 @@ class webhook:
         return "Unable to process request: {}".format(req.json), 400
 
     def send_confirmation_email(self):
+        if self.smtp_conf == None:
+            return
         self.send_email(self.smtp_conf["complete_template"])
 
     def send_fail_email(self):
+        if self.smtp_conf == None:
+            return
         self.send_email(self.smtp_conf["fail_template"])
         
     def send_email(self, template):

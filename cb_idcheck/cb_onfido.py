@@ -38,7 +38,11 @@ class cb_onfido:
             return appliccant_check[1].id
 
       def get_kycfile_from_applicant_check(self, applicant_check):
-            self.record.import_from_applicant_check(applicant_check)
+            if self.record.import_from_applicant_check(applicant_check) == False:
+                  self.record.to_file(self.consider_dir)
+                  message = 'ID Check result: import_from_applicant_check failed. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
+                  print(message)
+                  return message, None
             if(applicant_check[1].result=="clear"):
                   self.record.get()
                   self.record.to_file(self.whitelisted_dir)
