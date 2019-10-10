@@ -25,8 +25,8 @@ from email.mime.text import MIMEText
 PYTHON=sys.executable
 SCRIPT=__file__
 
-if 'app' not in globals():
-    app=Flask(__name__)
+#if 'app' not in globals():
+#    app=Flask(__name__)
 
 class webhook:
     def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
