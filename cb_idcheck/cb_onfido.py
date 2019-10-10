@@ -47,14 +47,14 @@ class cb_onfido:
                   return message, 200
                 #The check returned 'consider' status so human intervention is required.
             elif(applicant_check[1].result=="consider"):
-                  self.cust_record.to_file(self.consider_dir)
+                  self.record.to_file(self.consider_dir)
                   message = 'ID Check result: consider. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
                   print(message)
-                  return message, 200
+                  return message, None
             else:
                   message = 'Unknown ID check result. check-id:' + str(applicant_check[1].id)
                   print(message)
-                  return message, 200
+                  return message, None
             
             
       #Retrieve report from href.

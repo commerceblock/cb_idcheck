@@ -73,7 +73,8 @@ class webhook:
         parser.add_argument('--smtp_port', required=False, type=str, help="SMTP port", default=None)
         parser.add_argument('--email_from', required=False, type=str, help="The FROM email address", default=None)
         parser.add_argument('--email_subject', required=False, type=str, help="The email subject", default=None)
-        parser.add_argument('--email_template_file', required=False, type=str, help="The idcheck completeion email template", default=None)
+        parser.add_argument('--email_template_file', required=False, type=str, help="The idcheck completion email template", default=None)
+        parser.add_argument('--email_fail_template_file', required=False, type=str, help="The idcheck fail email template", default=None)
 
         args = parser.parse_args(argv)
         self.whitelisted_dir=args.whitelisted_dir
@@ -111,6 +112,13 @@ class webhook:
         else:
             self.smtp_conf["compete_template"]=None
 
+        p=args.email_fail_template_file
+        if os.path.exists(p):
+            with open(p) as f:
+                self.smtp_conf["fail_template"]=Template(f.read())
+        else:
+            self.smtp_conf["fail_template"]=None
+            
             
         self.smtp_conf["server"]=args.smtp_server
         self.smtp_conf["port"]=args.smtp_port
@@ -206,7 +214,12 @@ class webhook:
                     self.send_confirmation_email()
                     return message, retval
                 else:
-                    print('ID Check result: fail')
+                    if message == None:
+                        message="Check failed. check-id: " + str(self.id_api.get_checkid_from_request(req))
+                    logging.info('%s', message)
+                    print(message)
+                    self.send_fail_email()
+                    return message, 200
         elif(req.json["payload"]["action"]=="check.started"):
             infostr="Check started. check-id: " + str(self.id_api.get_checkid_from_request(req))
             print(infostr)
@@ -278,11 +291,17 @@ class webhook:
         return "Unable to process request: {}".format(req.json), 400
 
     def send_confirmation_email(self):
+        self.send_email(self.smtp_conf["complete_template"])
+
+    def send_fail_email(self):
+        self.send_email(self.smtp_conf["fail_template"])
+        
+    def send_email(self, template):
         if self.smtp_conf == None:
             return
         full_name=str(self.id_api.record.first_name) + " " + str(self.id_api.record.last_name)        
         msg = MIMEMultipart()       # create a message
-        message = self.smtp_conf["complete_template"].substitute(TO_NAME=full_name)
+        message = template.substitute(TO_NAME=full_name)
         msg['From']=self.smtp_conf["email_from"]
         msg['To']=self.id_api.record.email
         msg['Subject']=self.smtp_conf["email_subject"]
@@ -293,7 +312,7 @@ class webhook:
             s.send_message(msg)
         except Exception as e:
             print(e)
-            logging.error('cb_idcheck.webhook.send_confirmation_email: ' + str(datetime.now()) + ' ' + str(e))
+            logging.error('cb_idcheck.webhook.send_email: ' + str(datetime.now()) + ' ' + str(e))
             
         del msg
     
