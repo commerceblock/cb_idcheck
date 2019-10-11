@@ -39,7 +39,7 @@ class webhook:
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
                  whitelisted_dir=os.environ.get('WHITELISTED_DIR', None),
                  consider_dir=os.environ.get('CONSIDER_DIR', None),
-                 *smtp_conf=None):
+                 smtp_conf):
         ssl.create_default_context()
         self.idcheck_token=idcheck_token
         self.route='/'
