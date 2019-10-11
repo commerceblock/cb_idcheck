@@ -29,7 +29,7 @@ SCRIPT=__file__
 #    app=Flask(__name__)
 
 class webhook:
-    def __init__(self, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
+    def __init__(self, smtp_conf, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
                  url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'),
@@ -38,8 +38,7 @@ class webhook:
                  ngrok=False, 
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
                  whitelisted_dir=os.environ.get('WHITELISTED_DIR', None),
-                 consider_dir=os.environ.get('CONSIDER_DIR', None),
-                 smtp_conf):
+                 consider_dir=os.environ.get('CONSIDER_DIR', None)):
         ssl.create_default_context()
         self.idcheck_token=idcheck_token
         self.route='/'
