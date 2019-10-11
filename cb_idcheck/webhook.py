@@ -91,47 +91,47 @@ class webhook:
 
         if self.smtp_conf == None:
             self.smtp_conf={}
-        p=args.smtp_username_file
-        if os.path.exists(p):
-            with open(p) as f:
-                self.smtp_conf["username"]=f.readline().rstrip()
-        else:
-            self.smtp_conf["username"]=None
+            p=args.smtp_username_file
+            if os.path.exists(p):
+                with open(p) as f:
+                    self.smtp_conf["username"]=f.readline().rstrip()
+            else:
+                self.smtp_conf["username"]=None
 
-        p=args.smtp_password_file
-        if os.path.exists(p):
-            with open(p) as f:
-                self.smtp_conf["password"]=f.readline().rstrip()
-        else:
-            self.smtp_conf["password"]=None
+            p=args.smtp_password_file
+            if os.path.exists(p):
+                with open(p) as f:
+                    self.smtp_conf["password"]=f.readline().rstrip()
+            else:
+                self.smtp_conf["password"]=None
 
-        p=args.email_template_file
-        if os.path.exists(p):
-            with open(p) as f:
-                self.smtp_conf["complete_template"]=Template(f.read())
-        else:
-            self.smtp_conf["compete_template"]=None
+            p=args.email_template_file
+            if os.path.exists(p):
+                with open(p) as f:
+                    self.smtp_conf["complete_template"]=Template(f.read())
+            else:
+                self.smtp_conf["complete_template"]=None
 
-        p=args.email_fail_template_file
-        if os.path.exists(p):
-            with open(p) as f:
-                self.smtp_conf["fail_template"]=Template(f.read())
-        else:
-            self.smtp_conf["fail_template"]=None
+            p=args.email_fail_template_file
+            if os.path.exists(p):
+                with open(p) as f:
+                    self.smtp_conf["fail_template"]=Template(f.read())
+            else:
+                self.smtp_conf["fail_template"]=None
             
             
-        self.smtp_conf["server"]=args.smtp_server
-        self.smtp_conf["port"]=args.smtp_port
-        self.smtp_conf["email_from"]=args.email_from
-        self.smtp_conf["email_subject"]=args.email_subject
+            self.smtp_conf["server"]=args.smtp_server
+            self.smtp_conf["port"]=args.smtp_port
+            self.smtp_conf["email_from"]=args.email_from
+            self.smtp_conf["email_subject"]=args.email_subject
 
-        bSMTP=True
-        for item in self.smtp_conf:
-            if item == None:
-                bSMTP=False
-                break
-        if bSMTP == False:
-            self.smtp_conf=None
+            bSMTP=True
+            for item in self.smtp_conf:
+                if item == None:
+                    bSMTP=False
+                    break
+            if bSMTP == False:
+                self.smtp_conf=None
    
     def authenticate(self, req):
         key = urllib.parse.quote_plus(self.token).encode()
