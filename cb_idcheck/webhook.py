@@ -55,8 +55,9 @@ class webhook:
         self.whitelisted_dir=whitelisted_dir
         self.consider_dir=consider_dir
         self.smtp_conf=smtp_conf
-        self.requests_received=deque(maxlen=2)
+        self.checks_processed=deque(maxlen=1000)
         
+
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
         parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
@@ -223,15 +224,18 @@ class webhook:
         if not self.authenticate(req):
             logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
             abort(401)
-        if self.is_duplicate_request(req):
-            self.requests_received.append(req)
-            logging.info('Duplicate request received. Ignoring: %s', req.json)
-            print("Duplicate request recceived. Ignoring: {}".format(req.json))
-            return "Duplicate request received. Ignoring: {}".format(req.json), 200
-        self.requests_received.append(req)
+        #For testing
         if(req.json["payload"]["action"]=="check.completed"):
+#            if self.is_duplicate_request(req):
+#                self.requests_received.append(req)
+#                logging.info('Duplicate request received. Ignoring: %s', req.json)
+#                print("Duplicate request recceived. Ignoring: {}".format(req.json))
+#                return "Duplicate request received. Ignoring: {}".format(req.json), 200
+#            self.requests_received.append(req)
+            
             print('completed check received')
-            report_list=self.id_api.list_reports(req.json["payload"]["object"]["id"])
+            checkid = req.json["payload"]["object"]["id"]
+            report_list=self.id_api.list_reports(checkid)
             if(self.verify_check_content(report_list) == False):
                 infostr='ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: '
                 print(infostr)
@@ -240,7 +244,12 @@ class webhook:
                 self.send_fail_email()
                 return infostr, 200
             else:
-                message, retval = self.id_api.process_webhook_request(req)
+                if not checkid in self.checks_processed:
+                    message, retval = self.id_api.process_webhook_request(req)
+                    self.checks_processed.append(checkid)
+                else:
+                    message = "Check already processed. check-id: " + str(checkid)
+                    return message, 200
                 if retval != None:
                     print(message)
                     logging.info('%s', message)
