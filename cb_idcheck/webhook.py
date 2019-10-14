@@ -26,8 +26,8 @@ from collections import deque
 PYTHON=sys.executable
 SCRIPT=__file__
 
-if 'app' not in globals():
-    app=Flask(__name__)
+#if 'app' not in globals():
+#    app=Flask(__name__)
 
 class webhook:
     def __init__(self, smtp_conf=None,
