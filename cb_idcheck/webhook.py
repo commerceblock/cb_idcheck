@@ -26,11 +26,11 @@ from collections import deque
 PYTHON=sys.executable
 SCRIPT=__file__
 
-#if 'app' not in globals():
-#    app=Flask(__name__)
+if 'app' not in globals():
+    app=Flask(__name__)
 
 class webhook:
-    def __init__(self, smtp_conf,
+    def __init__(self, smtp_conf=None,
                  token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
                  url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
@@ -198,19 +198,33 @@ class webhook:
 
     def is_duplicate_request(self, req):
         for r in self.requests_received:
-            if compare_request_payload(r, req):
+            if self.compare_request_payload_ignore_completed_at(r, req):
                 return True
         return False
 
-    def compare_request_payload(self, req1, req2):
-        return req1.json["payload"] == req2.json["payload"]
+    def compare_request_payload_ignore_completed_at(self, req1, req2):
+        p1 = req1.json["payload"]
+        p2 = req2.json["payload"]
+        o1 = p1["object"]
+        o2 = p2["object"]
+        if o1["href"] != o2["href"]:
+            return False
+        if o1["id"] != o2["id"]:
+            return False
+        if o1["status"] != o2["status"]:
+            return False
+        if p1["action"] != p2["action"]:
+            return False
+        if p1["resource_type"] != p2["resource_type"]:
+            return False
+        return True
             
     def process_post(self, req):
         if not self.authenticate(req):
             logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
             abort(401)
         if self.is_duplicate_request(req):
-            self.requests_received.clear()
+            self.requests_received.append(req)
             logging.info('Duplicate request received. Ignoring: %s', req.json)
             print("Duplicate request recceived. Ignoring: {}".format(req.json))
             return "Duplicate request received. Ignoring: {}".format(req.json), 200
