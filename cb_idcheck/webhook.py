@@ -1,4 +1,4 @@
-# Copyright (c) 2018 TAhe CommerceBlock Developers                                                                                                
+# Copyright (c) 2018 Ahe CommerceBlock Developers                                                                                                
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
@@ -21,6 +21,7 @@ from cb_idcheck.idcheck import idcheck
 from cb_idcheck.idcheck_config import idcheck_config
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from collections import deque
 
 PYTHON=sys.executable
 SCRIPT=__file__
@@ -29,7 +30,8 @@ SCRIPT=__file__
 #    app=Flask(__name__)
 
 class webhook:
-    def __init__(self, smtp_conf, token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
+    def __init__(self, smtp_conf,
+                 token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
                  url=os.environ.get('IDCHECK_WEBHOOK_URL', None), 
                  port=os.environ.get('IDCHECK_WEBHOOK_PORT', None), 
                  log=os.environ.get('IDCHECK_LOG', '/usr/local/var/log/cb_idcheck.log'),
@@ -53,6 +55,7 @@ class webhook:
         self.whitelisted_dir=whitelisted_dir
         self.consider_dir=consider_dir
         self.smtp_conf=smtp_conf
+        self.requests_received=deque(maxlen=2)
         
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -197,6 +200,12 @@ class webhook:
         if not self.authenticate(req):
             logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
             abort(401)
+        if req in self.requests_received:
+            self.requests_received.clear()
+            logging.info('Duplicate request received. Ignoring: %s', req.json)
+            print("Duplicate request recceived. Ignoring: {}".format(req.json))
+            return "Duplicate request received. Ignoring: {}".format(req.json), 200
+        self.requests_received.append(req)
         if(req.json["payload"]["action"]=="check.completed"):
             print('completed check received')
             report_list=self.id_api.list_reports(req.json["payload"]["object"]["id"])
