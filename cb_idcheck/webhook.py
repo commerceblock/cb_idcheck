@@ -196,11 +196,20 @@ class webhook:
     def hello(self):
         return "Hello World from cb_idcheck webhook class"
 
+    def is_duplicate_request(self, req):
+        for r in self.requests_received:
+            if compare_request_payload(r, req):
+                return True
+        return False
+
+    def compare_request_payload(self, req1, req2):
+        return req1.json["payload"] == req2.json["payload"]
+            
     def process_post(self, req):
         if not self.authenticate(req):
             logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
             abort(401)
-        if req in self.requests_received:
+        if self.is_duplicate_request(req):
             self.requests_received.clear()
             logging.info('Duplicate request received. Ignoring: %s', req.json)
             print("Duplicate request recceived. Ignoring: {}".format(req.json))
