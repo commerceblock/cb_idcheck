@@ -13,27 +13,21 @@ from pprint import pprint
 from cb_idcheck import record
 import logging
 
-#if 'app' not in globals():
-#    app=Flask(__name__)
-
-def get_logger():
-    if 'app' not in globals():
-        return logging.getLogger(self.__class__.__name__)
-    else:
-        return app.logger
-
 class cb_onfido:
-      def __init__(self, token=None, whitelisted_dir="whitelisted", consider_dir="consider"):
-            self.logger = get_logger()
-            self.whitelisted_dir=whitelisted_dir
-            self.consider_dir=consider_dir
-            self.record = record.record()
-            self.onfido = onfido
-            self.configuration = self.onfido.Configuration()
-            self.configuration.api_key_prefix['Authorization'] = 'Token'
-            self.api_instance = self.onfido.DefaultApi()
-            if token:
-                  self.configuration.api_key['Authorization'] = 'token=' + token
+      def __init__(self, token=None, whitelisted_dir="whitelisted", consider_dir="consider", logger=None):
+        if logger != None:
+            self.logger = logger
+        else:
+            self.logger = logging.getLogger(self.__class__.__name__)
+        self.whitelisted_dir=whitelisted_dir
+        self.consider_dir=consider_dir
+        self.record = record.record()
+        self.onfido = onfido
+        self.configuration = self.onfido.Configuration()
+        self.configuration.api_key_prefix['Authorization'] = 'Token'
+        self.api_instance = self.onfido.DefaultApi()
+        if token:
+            self.configuration.api_key['Authorization'] = 'token=' + token
 
       def process_webhook_request(self, request):
             return self.get_kycfile_from_href(request.json["payload"]["object"]["href"])

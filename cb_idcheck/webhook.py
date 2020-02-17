@@ -29,12 +29,6 @@ SCRIPT=__file__
 #if 'app' not in globals():
 #    app=Flask(__name__)
 
-def get_logger():
-    if 'app' not in globals():
-        return logging.getLogger(self.__class__.__name__)
-    else:
-        return app.logger
-    
 class webhook:
     def __init__(self, smtp_conf=None,
                  token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
@@ -46,7 +40,8 @@ class webhook:
                  ngrok=False, 
                  idcheck_token=os.environ.get('IDCHECK_API_TOKEN', None),
                  whitelisted_dir=os.environ.get('WHITELISTED_DIR', None),
-                 consider_dir=os.environ.get('CONSIDER_DIR', None)):
+                 consider_dir=os.environ.get('CONSIDER_DIR', None),
+                 logger=None):
         ssl.create_default_context()
         self.idcheck_token=idcheck_token
         self.route='/'
@@ -62,7 +57,10 @@ class webhook:
         self.consider_dir=consider_dir
         self.smtp_conf=smtp_conf
         self.checks_processed=deque(maxlen=1000)
-        self.logger=get_logger()
+        if logger != None:
+            self.logger = logger
+        else:
+            self.logger = logging.getLogger(self.__class__.__name__)
 
     def set_token(self, token):
         self.token=token
@@ -145,7 +143,7 @@ class webhook:
                     break
             if bSMTP == False:
                 self.smtp_conf=None
-   
+
     def authenticate(self, req):
         message = req.data
         auth_code=hmac.new(self.key, message, hashlib.sha256).hexdigest()
@@ -387,7 +385,7 @@ class webhook:
     def init(self):
         
         if self.id_api_type == str("onfido"):
-            self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
+            self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir, logger=self.logger)
             self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='express'))
         elif self.id_api_type == str("local"):
             selfid_api = cb_local.cb_local()
