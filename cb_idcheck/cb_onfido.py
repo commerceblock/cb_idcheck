@@ -1,8 +1,9 @@
-# Copyright (c) 2018 The CommerprintceBlock Developers                                                                                                              
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 #Class inhertied from onfido class for connection to onfido and id check submission/retrieval
+from flask import Flask, request, abort
 import onfido
 import os
 from onfido.rest import ApiException
@@ -12,9 +13,18 @@ from pprint import pprint
 from cb_idcheck import record
 import logging
 
+#if 'app' not in globals():
+#    app=Flask(__name__)
+
+def get_logger():
+    if 'app' not in globals():
+        return logging.getLogger(self.__class__.__name__)
+    else:
+        return app.logger
+
 class cb_onfido:
       def __init__(self, token=None, whitelisted_dir="whitelisted", consider_dir="consider"):
-            self.logger = logging.getLogger(self.__class__.__name__)
+            self.logger = get_logger()
             self.whitelisted_dir=whitelisted_dir
             self.consider_dir=consider_dir
             self.record = record.record()
@@ -43,27 +53,19 @@ class cb_onfido:
             if self.record.import_from_applicant_check(applicant_check) == False:
                   self.record.to_file(self.consider_dir)
                   message = 'ID Check result: import_from_applicant_check failed. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
-                  print(message)
-                  self.logger.warning("%s", message)
                   return message, None
             if(applicant_check[1].result=="clear"):
                   self.record.get()
                   self.record.to_file(self.whitelisted_dir)
                   message = 'ID Check result: clear. Added kycfile to whitelisted dir. check-id:' + str(applicant_check[1].id)
-                  print(message)
-                  self.logger.info("%s", message)
                   return message, 200
                 #The check returned 'consider' status so human intervention is required.
             elif(applicant_check[1].result=="consider"):
                   self.record.to_file(self.consider_dir)
                   message = 'ID Check result: consider. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
-                  print(message)
-                  self.logger.info("%s", message)
                   return message, None
             else:
                   message = 'Unknown ID check result. check-id:' + str(applicant_check[1].id)
-                  print(message)
-                  self.logger.info("%s", message)
                   return message, None
             
             
@@ -95,6 +97,7 @@ class cb_onfido:
             except ApiException as e:
                   pprint(e.body)
                   self.logger.error("%s", e.body)
+                  return None
 
       #Retrieves the applicant and check from the href.
       def find_applicant_check(self,href=None, applicant_id=None, check_id=None):

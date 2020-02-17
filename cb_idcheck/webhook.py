@@ -29,6 +29,12 @@ SCRIPT=__file__
 #if 'app' not in globals():
 #    app=Flask(__name__)
 
+def get_logger():
+    if 'app' not in globals():
+        return logging.getLogger(self.__class__.__name__)
+    else:
+        return app.logger
+    
 class webhook:
     def __init__(self, smtp_conf=None,
                  token=os.environ.get('IDCHECK_WEBHOOK_TOKEN', None), 
@@ -45,7 +51,7 @@ class webhook:
         self.idcheck_token=idcheck_token
         self.route='/'
         self.url=url
-        self.token=token
+        self.set_token(token)
         self.log=log
         self.ngrok=ngrok
         self.ngrok_process=None
@@ -56,8 +62,12 @@ class webhook:
         self.consider_dir=consider_dir
         self.smtp_conf=smtp_conf
         self.checks_processed=deque(maxlen=1000)
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger=get_logger()
 
+    def set_token(self, token):
+        self.token=token
+        self.key=urllib.parse.quote_plus(token).encode()
+        
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
         parser.add_argument('--token', required=False, type=str, help="Webhook token. Default=$IDCHECK_WEBHOOK_TOKEN", default=self.token)
@@ -82,7 +92,7 @@ class webhook:
         args = parser.parse_args(argv)
         self.whitelisted_dir=args.whitelisted_dir
         self.consider_dir=args.consider_dir
-        self.token = args.token
+        self.set_token(args.token)
         self.url=args.url
         self.port=args.port
         self.log=args.log
@@ -137,10 +147,13 @@ class webhook:
                 self.smtp_conf=None
    
     def authenticate(self, req):
-        key = urllib.parse.quote_plus(self.token).encode()
         message = req.data
-        auth_code=hmac.new(key, message, hashlib.sha256).hexdigest()
-        return(auth_code == req.headers["X-Sha2-Signature"])
+        auth_code=hmac.new(self.key, message, hashlib.sha256).hexdigest()
+        signature= req.headers["X-Sha2-Signature"]
+        if(auth_code != signature):
+            self.logger.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
+            abort(401)
+
 
     #Expose local web server to the internet (https only)
     def start_ngrok(self):
@@ -221,9 +234,7 @@ class webhook:
         return True
             
     def process_post(self, req):
-        if not self.authenticate(req):
-            self.logger.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
-            abort(401)
+        self.authenticate(req)
         #For testing
         if(req.json["payload"]["action"]=="check.completed"):
 #            if self.is_duplicate_request(req):
@@ -327,7 +338,6 @@ class webhook:
         elif(req.json["payload"]["action"]=="test_action"):
             infostr='Test successful.'
             print(infostr)
-            print('Test successful.')
             self.logger.info('%s', infostr)
             return infostr, 200
         self.logger.info('Unable to process request: %s', req.json)
@@ -400,9 +410,7 @@ class webhook:
             self.logger.info(infos)
             self.logger.info(webhook_api_response)
             self.logger.info(webhook_api_response.token)
-            self.token=webhook_api_response.token
-
-
+            self.set_token(webhook_api_response.token)
 
 
     #Start the Flask app
