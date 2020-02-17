@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Ahe CommerceBlock Developers                                                                                                
+# Copyright (c) 2018 The CommerceBlock Developers                                                                                                
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.  
 
@@ -56,7 +56,7 @@ class webhook:
         self.consider_dir=consider_dir
         self.smtp_conf=smtp_conf
         self.checks_processed=deque(maxlen=1000)
-        
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def parse_args(self, argv=None):
         parser = argparse.ArgumentParser()
@@ -222,13 +222,13 @@ class webhook:
             
     def process_post(self, req):
         if not self.authenticate(req):
-            logging.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
+            self.logger.warning('cb_idcheck.webhook: ' + str(datetime.now()) + ': A request sent to the webhook failed authentication.')
             abort(401)
         #For testing
         if(req.json["payload"]["action"]=="check.completed"):
 #            if self.is_duplicate_request(req):
 #                self.requests_received.append(req)
-#                logging.info('Duplicate request received. Ignoring: %s', req.json)
+#                self.logger.info('Duplicate request received. Ignoring: %s', req.json)
 #                print("Duplicate request recceived. Ignoring: {}".format(req.json))
 #                return "Duplicate request received. Ignoring: {}".format(req.json), 200
 #            self.requests_received.append(req)
@@ -239,8 +239,9 @@ class webhook:
             if(self.verify_check_content(report_list) == False):
                 infostr='ID Check result: check does not contain all the required report types. The required report types are: ' + str(self.idcheck_config) +  '. The included report types are: '
                 print(infostr)
-                logging.info('%s', infostr)
+                self.logger.info('%s', infostr)
                 pprint(report_list)
+                self.logger.info('%s', report_list)
                 self.send_fail_email()
                 return infostr, 200
             else:
@@ -249,86 +250,87 @@ class webhook:
                     self.checks_processed.append(checkid)
                 else:
                     message = "Check already processed. check-id: " + str(checkid)
+                    self.logger.info("%s", message)
                     return message, 200
                 if retval != None:
                     print(message)
-                    logging.info('%s', message)
+                    self.logger.info('%s', message)
                     self.send_confirmation_email()
                     return message, retval
                 else:
                     if message == None:
                         message="Check failed. check-id: " + str(self.id_api.get_checkid_from_request(req))
-                    logging.info('%s', message)
+                    self.logger.info('%s', message)
                     print(message)
                     self.send_fail_email()
                     return message, 200
         elif(req.json["payload"]["action"]=="check.started"):
             infostr="Check started. check-id: " + str(self.id_api.get_checkid_from_request(req))
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="check.reopened"):
             infostr="Check reopened. check-id: " + str(self.id_api.get_checkid_from_request(req))
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="check.withdrawn"):
             infostr="Check withdrawn. check-id: " + str(self.id_api.get_checkid_from_request(req))
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="check.form_opened"):
             infostr="Check form opened. check-id: " + str(self.id_api.get_checkid_from_request(req))
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="check.form_completed"):
             infostr="Check form completed. check-id: " + str(self.id_api.get_checkid_from_request(req))
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="report.withdrawn"):
             infostr="Report withdrawn"
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="report.resumed"):
             infostr="Report resumed"
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="report.cancelled"):
             infostr="Report cancelled"
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="report.awaiting_approval"):
             infostr="Report awaiting approval"
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
 
         elif(req.json["payload"]["action"]=="report.completed"):
             infostr="Report completed"
             print(infostr)
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
         
         elif(req.json["payload"]["action"]=="test_action"):
             infostr='Test successful.'
             print(infostr)
             print('Test successful.')
-            logging.info('%s', infostr)
+            self.logger.info('%s', infostr)
             return infostr, 200
-        logging.info('Unable to process request: %s', req.json)
+        self.logger.info('Unable to process request: %s', req.json)
         print("Unable to process request: {}".format(req.json))
         return "Unable to process request: {}".format(req.json), 400
 
@@ -358,7 +360,7 @@ class webhook:
             s.send_message(msg)
         except Exception as e:
             print(e)
-            logging.error('cb_idcheck.webhook.send_email: ' + str(datetime.now()) + ' ' + str(e))
+            self.logger.error('cb_idcheck.webhook.send_email: ' + str(datetime.now()) + ' ' + str(e))
             
         del msg
     
@@ -373,26 +375,34 @@ class webhook:
             return self.process_post(request)
 
     def init(self):
+        
         if self.id_api_type == str("onfido"):
             self.id_api = cb_onfido.cb_onfido(token=self.idcheck_token, whitelisted_dir=self.whitelisted_dir, consider_dir=self.consider_dir)
             self.idcheck_config=idcheck_config(self.id_api.onfido.Check(type='express'))
         elif self.id_api_type == str("local"):
             selfid_api = cb_local.cb_local()
         else:
-            sys.exit("Error: unknown id_api: " + args.id_api)
+            errs="Error: unknown id_api: " + args.id_api
+            self.logger.error(errs)
+            sys.exit(errs)
         
         if(self.ngrok==True):
             self.start_ngrok()
             self.get_ngrok_ipaddress()
-            pprint("Webhook URL = " + str(self.url))
+            infos="Webhook URL = " + str(self.url)
+            pprint(infos)
+            self.logger.info(infos)
             webhook_api_response=self.id_api.create_webhook(url=self.url)
-            pprint("finished create_webhook with api response:")
+            infos = "finished create_webhook with api response:"
+            pprint(infos)
             pprint(webhook_api_response)
             pprint(webhook_api_response.token)
+            self.logger.info(infos)
+            self.logger.info(webhook_api_response)
+            self.logger.info(webhook_api_response.token)
             self.token=webhook_api_response.token
 
-        #Configure logging
-        logging.basicConfig(filename=self.log, level=logging.INFO)
+
 
 
     #Start the Flask app
@@ -403,7 +413,9 @@ class webhook:
 
     def cleanup(self):
         if(self.ngrok_process):
-            pprint("Cleaning up...")
+            infos="Cleaning up..."
+            pprint(infos)
+            self.logger.info(infos)
             self.ngrok_process.terminate()
             self.tunnel_info_process.terminate()
             self.ngrok_process.wait()

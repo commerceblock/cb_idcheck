@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The CommerceBlock Developers                                                                                                              
+# Copyright (c) 2018 The CommerprintceBlock Developers                                                                                                              
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,11 @@ from .record import record
 from .database import database
 from pprint import pprint
 from cb_idcheck import record
+import logging
 
 class cb_onfido:
       def __init__(self, token=None, whitelisted_dir="whitelisted", consider_dir="consider"):
+            self.logger = logging.getLogger(self.__class__.__name__)
             self.whitelisted_dir=whitelisted_dir
             self.consider_dir=consider_dir
             self.record = record.record()
@@ -42,22 +44,26 @@ class cb_onfido:
                   self.record.to_file(self.consider_dir)
                   message = 'ID Check result: import_from_applicant_check failed. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
                   print(message)
+                  self.logger.warning("%s", message)
                   return message, None
             if(applicant_check[1].result=="clear"):
                   self.record.get()
                   self.record.to_file(self.whitelisted_dir)
                   message = 'ID Check result: clear. Added kycfile to whitelisted dir. check-id:' + str(applicant_check[1].id)
                   print(message)
+                  self.logger.info("%s", message)
                   return message, 200
                 #The check returned 'consider' status so human intervention is required.
             elif(applicant_check[1].result=="consider"):
                   self.record.to_file(self.consider_dir)
                   message = 'ID Check result: consider. Added kycfile to consider dir. check-id:' + str(applicant_check[1].id)
                   print(message)
+                  self.logger.info("%s", message)
                   return message, None
             else:
                   message = 'Unknown ID check result. check-id:' + str(applicant_check[1].id)
                   print(message)
+                  self.logger.info("%s", message)
                   return message, None
             
             
@@ -78,6 +84,7 @@ class cb_onfido:
                   api_response_report = self.api_instance.find_report(check_id, report_id)
             except ApiException as e:
                   pprint(e.body)
+                  self.logger.error("%s", e.body)
                   return None
 
             return api_response_report
@@ -87,6 +94,7 @@ class cb_onfido:
                   return self.api_instance.find_applicant(applicant_id)
             except ApiException as e:
                   pprint(e.body)
+                  self.logger.error("%s", e.body)
 
       #Retrieves the applicant and check from the href.
       def find_applicant_check(self,href=None, applicant_id=None, check_id=None):
@@ -107,12 +115,14 @@ class cb_onfido:
                   api_response_applicant = self.api_instance.find_applicant(applicant_id)
             except ApiException as e:
                   pprint(e.body)
+                  self.logger.error("%s", e.body)
                   return None
 
             try:
                   api_response_check = self.api_instance.find_check(applicant_id, check_id)
             except ApiException as e:
                   pprint(e.body)
+                  self.logger.error("%s", e.body)
                   return None
 
             return [api_response_applicant, api_response_check]
@@ -132,12 +142,14 @@ class cb_onfido:
                   api_response_check = self.api_instance.find_check(applicant_id, check_id)
             except ApiException as e:
                   pprint(e.body)
+                  self.logger.error("%s", e.body)
                   return None
 
             try:
                   api_response_report = self.find_report(href)
             except ApiException as e:
                   pprint(e.body)
+                  self.logger.error("%s", e.body)
                   return None
 
             return [api_response_check, api_response_report]
@@ -184,7 +196,7 @@ class cb_onfido:
                   try:
                         templist=self.api_instance.list_checks(customer_id, page=n_page)
                   except ApiException as e:
-                        logging.warning(e.body)
+                        self.logger.warning(e.body)
                         break
                   if templist == None:
                         break
@@ -204,7 +216,7 @@ class cb_onfido:
             try:
                   reports_list=self.api_instance.list_reports(check_id)
             except ApiException as e:
-                  logging.warning(e.body)
+                  self.logger.warning(e.body)
             if reports_list == None:
                   return []
             return reports_list.reports
